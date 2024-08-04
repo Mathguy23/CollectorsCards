@@ -4,7 +4,7 @@
 --- PREFIX: coll
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Collectors Cards
---- VERSION: 1.1.0
+--- VERSION: 1.1.1
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -661,7 +661,7 @@ SMODS.CCard {
         name = "Scandinavian Defense",
         text = {
             "{C:attention}Queen{}, {C:blue}+#1#{} Chips",
-            "{C:red}+#2#{} Mult when with",
+            "{C:red}+#2#{} Mult when played with",
             "no {C:spades}Spades{} or {C:clubs}Clubs{}"
         }
     },
