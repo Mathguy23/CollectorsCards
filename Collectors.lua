@@ -224,9 +224,19 @@ SMODS.Back {
     apply = function(self)
         G.E_MANAGER:add_event(Event({
             func = function()
-                for i = 1, 3 do
+                for i = 1, 20 do
                     local key = create_unique_trading_key()
-                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS["CL1"], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+                    G.deck:emplace(_card)
+                    table.insert(G.playing_cards, _card)
+                end
+                for i = 1, 20 do
+                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS["C_K"], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+                    G.deck:emplace(_card)
+                    table.insert(G.playing_cards, _card)
+                end
+                for i = 1, 20 do
+                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS["C_Q"], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
                     G.deck:emplace(_card)
                     table.insert(G.playing_cards, _card)
                 end
@@ -1227,6 +1237,42 @@ function fix_X_same(results, card)
         end
     end
     return results
+end
+
+function fix_flush_house(parts, hand)
+    if next(parts._flush) and next(parts._4) and not next(parts._5) and not (next(parts._3) and next(parts._2)) then
+        local flush_house = nil
+        for i_, part in ipairs(parts._4) do
+            local part_ids = {}
+            local multiranks = {}
+            for i, j in ipairs(part) do
+                if j.config.card and j.config.card.multirank then
+                    table.insert(multiranks, {j, i})
+                end
+                for i2, j2 in ipairs(hand) do
+                    if j == j2 then
+                        part_ids[i2] = true
+                    end
+                end
+            end
+            for i, j in ipairs(hand) do
+                if not part_ids[i] then
+                    for i2, j2 in ipairs(multiranks) do
+                        if j:matches(j2[1]) or j2[1]:matches(j) then
+                            flush_house =  {i_, part, j, j2}
+                            break
+                        end
+                    end
+                end
+            end
+        end
+        if flush_house then
+            table.remove(flush_house[2], flush_house[4][2])
+            local three_of_a_kind = table.remove(parts._4, flush_house[1])
+            table.insert(parts._3, three_of_a_kind)
+            table.insert(parts._2, {flush_house[3], flush_house[4][1]})
+        end
+    end
 end
 
 function get_straight(hand)

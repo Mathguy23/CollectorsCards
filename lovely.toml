@@ -152,7 +152,8 @@ match_indent = true
 target = 'functions/misc_functions.lua'
 pattern = '''if next(parts._5) and next(parts._flush) then'''
 position = 'before'
-payload = '''for i, j in ipairs(hand) do fix_X_same({parts._2, parts._3, parts._4, parts._5}, j) end'''
+payload = '''for i, j in ipairs(hand) do fix_X_same({parts._2, parts._3, parts._4, parts._5}, j) end
+fix_flush_house(parts, hand)'''
 match_indent = true
 
 [[patches]]
