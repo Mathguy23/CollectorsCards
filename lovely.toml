@@ -1,0 +1,424 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''elseif specific_vars and (card_type == 'Default' or card_type == 'Enhanced') then'''
+position = 'before'
+payload = '''elseif specific_vars and type(specific_vars.collect) == "table" then
+    full_UI_table.name = {}
+    localize{type = 'other', key = specific_vars.collect.key .. "_name", set = 'Other', nodes = full_UI_table.name}
+    full_UI_table.name = full_UI_table.name[1]'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''localize{type = 'other', key = _c.key, nodes = desc_nodes, vars = specific_vars or _c.vars}'''
+position = 'after'
+payload = '''elseif specific_vars and type(specific_vars.collect) == "table" then
+    collectors_card_description(_c, desc_nodes, specific_vars, cfg, info_queue)'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''bonus_chips = (self.ability.bonus + (self.ability.perma_bonus or 0)) > 0 and (self.ability.bonus + (self.ability.perma_bonus or 0)) or nil,'''
+position = 'after'
+payload = '''collect = (self.config.card.collect and {key = self.config.card.key, sets = self.config.card.sets}) or "nope",
+loc_vars = self.config.card.loc_vars'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:is_suit(suit, bypass_debuff, flush_calc)'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.is_suit and (type(self.config.card.is_suit) == "function") then
+        return self.config.card:is_suit(self, suit, bypass_debuff, flush_calc)
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:get_id()'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.get_id and (type(self.config.card.get_id) == "function") then
+        return self.config.card:get_id(self)
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:get_chip_bonus()'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.get_eval and (type(self.config.card.get_eval) == "function") then
+        local value = self.config.card:get_eval(self).chips
+        if value ~= nil then return value end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:get_chip_mult()'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.get_eval and (type(self.config.card.get_eval) == "function") then
+        local value = self.config.card:get_eval(self).mult
+        if value ~= nil then return value end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:get_chip_x_mult()'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.get_eval and (type(self.config.card.get_eval) == "function") then
+        local value = self.config.card:get_eval(self).x_mult
+        if value ~= nil then return value end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:get_chip_h_mult()'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.get_eval and (type(self.config.card.get_eval) == "function") then
+        local value = self.config.card:get_eval(self).h_mult
+        if value ~= nil then return value end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:get_chip_h_x_mult()'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.get_eval and (type(self.config.card.get_eval) == "function") then
+        local value = self.config.card:get_eval(self).h_x_mult
+        if value ~= nil then return value end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:get_p_dollars()'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.get_eval and (type(self.config.card.get_eval) == "function") then
+        local value = self.config.card:get_eval(self).dollars
+        if value ~= nil then return value end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:is_face(from_boss)'''
+position = 'after'
+payload = '''   if not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.is_face and (type(self.config.card.is_face) == "function") then
+        return self.config.card:is_face(self, from_boss)
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:calculate_seal(context)'''
+position = 'after'
+payload = '''   if not self.debuff and not (self.config.center and self.config.center.name == "Stone Card") and self.config.card and self.config.card.seal_messiness and (type(self.config.card.seal_messiness) == "function") then
+        local value = self.config.card:seal_messiness(self, context)
+        if value ~= nil then return value end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = '''if hand[i]:get_id() == hand[j]:get_id() and i ~= j then'''
+position = 'at'
+payload = '''if ((hand[i]:get_id() == hand[j]:get_id()) or hand[i]:matches(hand[j])) and i ~= j then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = '''if next(parts._5) and next(parts._flush) then'''
+position = 'before'
+payload = '''for i, j in ipairs(hand) do fix_X_same({parts._2, parts._3, parts._4, parts._5}, j) end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = '''vals[curr[1]:get_id()] = curr'''
+position = 'at'
+payload = '''vals[curr[1]:match_id()] = curr'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''self.base_cost = center.cost or 1'''
+position = 'at'
+payload = '''self.base_cost = center.cost or (self.config.card and self.config.card.cost) or 1'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability.consumeable or self.ability.set == 'Joker' or (self.area and self.area == G.pack_cards) then'''
+position = 'at'
+payload = '''if self.ability.consumeable or self.ability.set == 'Joker' or (self.area and self.area == G.pack_cards) or (self.config.card and self.config.card.collect and (self.area == G.hand)) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''((self.area == G.jokers) or (self.area == G.consumeables)) and "cr" or'''
+position = 'at'
+payload = '''((self.area == G.jokers) or (self.area == G.consumeables) or (self.config.card and self.config.card.collect and (self.area == G.hand))) and "cr" or'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''((self.area == G.jokers) or (self.area == G.consumeables)) and {x=x_off - 0.4,y=0} or'''
+position = 'at'
+payload = '''((self.area == G.jokers) or (self.area == G.consumeables) or (self.config.card and self.config.card.collect and (self.area == G.hand))) and {x=x_off - 0.4,y=0} or'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''self.sell_cost = math.max(1, math.floor(self.cost/2)) + (self.ability.extra_value or 0)'''
+position = 'after'
+payload = '''if (self.config.card and self.config.card.collect) then self.sell_cost = self.config.card.sell_cost end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''local use = nil'''
+position = 'after'
+payload = '''if card.config.card and card.config.card.collect and (card.area == G.hand) then
+    sell = {n=G.UIT.C, config={align = "cr"}, nodes={
+      {n=G.UIT.C, config={ref_table = card, align = "cr",padding = 0.1, r=0.08, minw = 1.25, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'sell_card', func = 'can_sell_card'}, nodes={
+        {n=G.UIT.B, config = {w=0.1,h=0.6}},
+        {n=G.UIT.C, config={align = "tm"}, nodes={
+          {n=G.UIT.R, config={align = "cm", maxw = 1.25}, nodes={
+            {n=G.UIT.T, config={text = localize('b_sell'),colour = G.C.UI.TEXT_LIGHT, scale = 0.4, shadow = true}}
+          }},
+          {n=G.UIT.R, config={align = "cm"}, nodes={
+            {n=G.UIT.T, config={text = localize('$'),colour = G.C.WHITE, scale = 0.4, shadow = true}},
+            {n=G.UIT.T, config={ref_table = card, ref_value = 'sell_cost_label',colour = G.C.WHITE, scale = 0.55, shadow = true}}
+          }}
+        }}
+      }},
+    }}
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''elseif self.debuff then'''
+position = 'at'
+payload = '''elseif self.debuff and not (self.config.card and self.config.card.collect) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''used_vouchers = {},'''
+position = 'after'
+payload = '''collector_sets = {},
+most_played_card = {suit = 'None', rank = -1},
+silver_played = 0,'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''Moveable.remove(self)'''
+position = 'after'
+payload = '''update_card_set()'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''self.config.card = card'''
+position = 'after'
+payload = '''update_card_set()'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''function new_round()'''
+position = 'after'
+payload = '''   update_card_set()'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:can_use_consumeable(any_state, skip_check)'''
+position = 'after'
+payload = '''   if (self.ability.name == 'Strength') or self.ability.consumeable.suit_conv then 
+        for i = 1, #G.hand.highlighted do
+            if G.hand.highlighted[i].config.card and G.hand.highlighted[i].config.card.collect then return false end
+        end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''local front = ((_type=='Base' or _type == 'Enhanced') and pseudorandom_element(G.P_CARDS, pseudoseed('front'..(key_append or '')..G.GAME.round_resets.ante))) or nil'''
+position = 'at'
+payload = '''local front = nil
+if (_type=='Base' or _type == 'Enhanced') then
+    local new_set = {}
+    for i, j in pairs(G.P_CARDS) do
+        if not j.collect then
+            new_set[i] = j
+        end
+        front = pseudorandom_element(new_set, pseudoseed('front'..(key_append or '')..G.GAME.round_resets.ante))
+    end
+elseif (_type=='Trading') then
+    local new_set = {}
+    for i, j in pairs(G.P_CARDS) do
+        if j.collect then
+            new_set[i] = j
+        end
+        front = pseudorandom_element(new_set, pseudoseed('front'..(key_append or '')..G.GAME.round_resets.ante))
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''if _type == 'Base' then'''
+position = 'before'
+payload = '''if _type == 'Trading' then
+    forced_key = 'c_base'
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.FUNCS.evaluate_play = function(e)'''
+position = 'after'
+payload = '''if (G.GAME.current_round.hands_played == 0) and (#G.play.cards == 1) and ((G.play.cards[1]:get_id() == 13) or (G.play.cards[1]:straight_base(13))) then
+    G.GAME.current_round.joker_chess = true
+end
+for i, j in ipairs(G.play.cards) do
+    if j.ability.times_played == nil then
+        j.ability.times_played = 1
+    else
+        j.ability.times_played = j.ability.times_played + 1
+    end
+    if j.config.card and j.config.card.name == "Silverware" then
+        G.GAME.silver_played = G.GAME.silver_played + 1
+        check_for_unlock({type = 'silverware_played', amount = G.GAME.silver_played})
+    end
+end
+local max = 0
+local max_card = G.playing_cards[1]
+for i, j in ipairs(G.playing_cards) do
+    if j.ability.times_played and (j.ability.times_played > max) then
+        max = j.ability.times_played
+        max_card = j
+    end
+end
+if max_card ~= nil then
+    local rank = max_card:get_id()
+    if rank > 0 then
+        G.GAME.most_played_card = {suit = localize(max_card:get_suit(), 'suits_plural'), rank = rank}
+    else
+        G.GAME.most_played_card = {suit = localize(max_card:get_suit(), 'suits_plural'), rank = -1}
+    end
+else
+    G.GAME.most_played_card = {suit = "No Suit", rank = -1}
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if G.play.cards[i].ability.effect == 'Stone Card' or G.play.cards[i].config.center.always_scores then'''
+position = 'at'
+payload = '''if G.play.cards[i].ability.effect == 'Stone Card' or G.play.cards[i].config.center.always_scores or G.play.cards[i].config.card.always_scores then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''pseudoshuffle(self.cards, pseudoseed(_seed or 'shuffle'))'''
+position = 'after'
+payload = '''self:pullMagent()'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''check_for_unlock({type = 'play_all_hearts'})'''
+position = 'after'
+payload = '''local back_to_hand = {}
+for i0 = 1, #G.play.cards do
+    local card = G.play.cards[i0]
+    if not card.shattered and not card.destroyed and card.config.card and card.config.card.sets and G.GAME.collector_sets['relic'].full then
+        local is_relic_set = false
+        for i2, j2 in ipairs(card.config.card.sets) do
+            if j2 == 'relic' then
+                is_relic_set = true
+                break
+            end
+        end
+        if is_relic_set then
+            table.insert(back_to_hand, card)
+            card.kept = true
+        end
+    end
+end
+G.FUNCS.draw_from_play_to_hand(back_to_hand)'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if (not v.shattered) and (not v.destroyed) then'''
+position = 'at'
+payload = '''if v.kept then
+    v.kept = nil
+elseif (not v.shattered) and (not v.destroyed) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:use_consumeable(area, copier)'''
+position = 'after'
+payload = '''if self.ability.name == 'Sigil' then
+    collecters_sigil_func(self, card, area, copier)
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if not initial then G.GAME.blind:debuff_card(self) end'''
+position = 'after'
+payload = '''self:set_cost()'''
+match_indent = true
