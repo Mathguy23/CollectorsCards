@@ -224,19 +224,9 @@ SMODS.Back {
     apply = function(self)
         G.E_MANAGER:add_event(Event({
             func = function()
-                for i = 1, 20 do
+                for i = 1, 3 do
                     local key = create_unique_trading_key()
-                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS["CL1"], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
-                    G.deck:emplace(_card)
-                    table.insert(G.playing_cards, _card)
-                end
-                for i = 1, 20 do
-                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS["C_K"], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
-                    G.deck:emplace(_card)
-                    table.insert(G.playing_cards, _card)
-                end
-                for i = 1, 20 do
-                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS["C_Q"], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
                     G.deck:emplace(_card)
                     table.insert(G.playing_cards, _card)
                 end
