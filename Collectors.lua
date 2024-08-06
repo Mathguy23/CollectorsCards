@@ -4,7 +4,7 @@
 --- PREFIX: coll
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Collectors Cards
---- VERSION: 1.1.1
+--- VERSION: 1.0.0
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -39,6 +39,8 @@ local sets = {
 }
 
 function SMODS.current_mod.process_loc_text()
+    G.localization.misc.suits_singular["No Suit"] = "No Suit"
+    G.localization.misc.suits_plural["No Suit"] = "No Suit"
     G.localization.descriptions.Other["suited_set"] = 
     {
         text = {
@@ -931,7 +933,7 @@ SMODS.CCard {
         }
     end,
     is_face = function(self, card, from_boss)
-        if G.GAME and G.GAME.most_played_card and SMODS.Ranks[G.GAME.most_played_card.rank] and SMODS.Ranks[G.GAME.most_played_card.rank].face then
+        if G.GAME and G.GAME.most_played_card and ((G.GAME.most_played_card.rank == 11) or (G.GAME.most_played_card.rank == 12) or (G.GAME.most_played_card.rank == 13)) then
             return true
         else
             if next(find_joker("Pareidolia")) then
@@ -1567,19 +1569,19 @@ function create_trading_card(area, key_append, dupes)
 end
 
 function create_unique_trading_key()
-    local all_cards = {}
+    local exclude_cards = {}
     local new_set = {}
     local front = nil
     if G.playing_cards then
         for i, j in ipairs(G.playing_cards) do
             if j.config.card and j.config.card.collect then
-                all_cards[j.config.card.alt_key] = true
+                exclude_cards[j.config.card.alt_key] = true
             end
         end
     end
     local valid = false
     for i, j in pairs(G.P_CARDS) do
-        if j.collect and not all_cards[i] and (not G.GAME.used_jokers or not G.GAME.used_jokers[i]) then
+        if j.collect and not exclude_cards[i] and (not G.GAME.used_jokers or not G.GAME.used_jokers[j.alt_key]) then
             new_set[i] = j
             valid = true
         end
@@ -1628,6 +1630,49 @@ end
 local old_ability = Card.set_ability
 function Card:set_ability(center, initial, delay_sprites)
     old_ability(self, center, initial, delay_sprites)
+    if not G.OVERLAY_MENU then 
+        if self.config.card.alt_key then
+        	G.GAME.used_jokers[self.config.card.alt_key] = true
+        end
+    end
+end
+
+local old_remove = Card.remove
+function Card:remove()
+    if not G.OVERLAY_MENU and G.playing_cards and self.config.card and self.config.card.collect and G and G.GAME and G.GAME.used_jokers then
+        local found = false
+        if G.playing_cards then
+            for i, j in ipairs(G.playing_cards) do
+                if (j ~= self) and j.config.card and j.config.card.collect and (j.config.card.alt_key == self.config.card.alt_key) then
+                    found = true
+                    break
+                end
+            end
+        end
+        if not found then
+            G.GAME.used_jokers[self.config.card.alt_key] = nil
+        end
+    end
+    old_remove(self)
+end
+
+local old_set_base = Card.set_base
+function Card:set_base(card, initial)
+    if not G.OVERLAY_MENU and G.playing_cards and self.config.card and self.config.card.collect and G and G.GAME and G.GAME.used_jokers then
+        local found = false
+        if G.playing_cards then
+            for i, j in ipairs(G.playing_cards) do
+                if (j ~= self) and j.config.card and j.config.card.collect and (j.config.card.alt_key == self.config.card.alt_key) then
+                    found = true
+                    break
+                end
+            end
+        end
+        if not found then
+            G.GAME.used_jokers[self.config.card.alt_key] = nil
+        end
+    end
+    old_set_base(self, card, initial)
     if not G.OVERLAY_MENU then 
         if self.config.card.alt_key then
         	G.GAME.used_jokers[self.config.card.alt_key] = true
