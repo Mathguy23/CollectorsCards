@@ -29,7 +29,7 @@ target = 'card.lua'
 pattern = '''bonus_chips = (self.ability.bonus + (self.ability.perma_bonus or 0)) > 0 and (self.ability.bonus + (self.ability.perma_bonus or 0)) or nil,'''
 position = 'after'
 payload = '''collect = (self.config.card.collect and {key = self.config.card.key, sets = self.config.card.sets}) or "nope",
-loc_vars = self.config.card.loc_vars'''
+loc_vars = self.config.card.loc_vars,'''
 match_indent = true
 
 [[patches]]
