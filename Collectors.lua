@@ -4,7 +4,7 @@
 --- PREFIX: coll
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Collectors Cards
---- VERSION: 1.0.0
+--- VERSION: 1.1.1
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
