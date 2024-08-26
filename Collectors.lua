@@ -4,7 +4,7 @@
 --- PREFIX: coll
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Collectors Cards
---- VERSION: 1.1.1
+--- VERSION: 1.1.2
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -1631,7 +1631,7 @@ local old_ability = Card.set_ability
 function Card:set_ability(center, initial, delay_sprites)
     old_ability(self, center, initial, delay_sprites)
     if not G.OVERLAY_MENU then 
-        if self.config.card.alt_key then
+        if self.config.card and self.config.card.alt_key then
         	G.GAME.used_jokers[self.config.card.alt_key] = true
         end
     end
