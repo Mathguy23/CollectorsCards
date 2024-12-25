@@ -16,6 +16,11 @@ return {
                     "Scandinavian Defense",
                 }
             },
+            double_up = {
+                text = {
+                    "Double Up"
+                }
+            }
         },
         CustomCard = {
             flint_card = {
@@ -35,7 +40,14 @@ return {
                 text = {
                     "{C:attention}#1#{}, {C:blue}+#2#{} Chips",
                     "{C:red}+#3#{} Mult when played with",
-                    "no {C:spades}Spades{} or {C:clubs}Clubs{}",
+                    "no {C:spades}#4#{} or {C:clubs}#5#{}",
+                }
+            },
+            double_up = {
+                text = {
+                    "{C:attention}Always scores{}",
+                    "{C:attention}Retrigger{} the card to",
+                    "the right {C:attention}#1#{} time"
                 }
             }
         },
