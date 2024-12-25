@@ -35,7 +35,7 @@ function Card:calculate_exotic(context, do_repeat)
             table.insert(new_do_repeat, do_repeat[j])
         end
     end
-    if self.debuff then return nil end
+    if self.debuff then return {} end
     local obj = self.config.center
     local name = self.ability.trading and self.ability.trading.name
     if not name then
