@@ -35,11 +35,25 @@ function Card:calculate_exotic(context, do_repeat)
             table.insert(new_do_repeat, do_repeat[j])
         end
     end
-    if self.debuff then return {} end
+    if self.debuff then
+        if context.does_score then
+            return false
+        elseif context.is_suit or context.get_id then
+            
+        else
+            return {}
+        end
+    end
     local obj = self.config.center
     local name = self.ability.trading and self.ability.trading.name
     if not name then
-        return {}
+        if context.does_score then
+            return false
+        elseif context.is_suit or context.get_id then
+            return nil
+        else
+            return {}
+        end
     end
     local effects = {}
     local reps = {1}
