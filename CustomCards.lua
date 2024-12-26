@@ -60,9 +60,9 @@ function Card:calculate_exotic(context, do_repeat)
     local i = 1
     while (i <= #reps) do
         local valid = true
-        if do_repeat then
+        if do_repeat and (i ~= 1) then
             for j = 1, #do_repeat do
-                if (i ~= 1) and (reps[i].cards[j] == self) then
+                if (i ~= 1) and (do_repeat[j] == self) then
                     valid = false
                 end
             end
