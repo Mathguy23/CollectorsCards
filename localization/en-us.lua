@@ -26,6 +26,11 @@ return {
                     "Eye Card",
                 }
             },
+            playable_joker = {
+                text = {
+                    "Playable Joker",
+                }
+            },
         },
         CustomCard = {
             flint_card = {
@@ -61,6 +66,14 @@ return {
                     "{C:blue}+#3#{} Chips"
                 }
             },
+            playable_joker = {
+                text = {
+                    "On {C:attention}discard{}, {C:green}#1# in #2#{} chance to",
+                    "add {C:dark_edition}Foil{}, {C:dark_edition}Holographic{}, or",
+                    "{C:dark_edition}Polychrome{} edition",
+                    "to a random card in {C:attention}hand"
+                }
+            }
         },
         Tarot = {
             c_pc_exchange = {

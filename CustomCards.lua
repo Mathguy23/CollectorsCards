@@ -204,6 +204,25 @@ function Card:calculate_exotic(context, do_repeat)
                         card = self
                     })
                 end
+            elseif context.discard then
+                if name == "Playable Joker" then
+                    local pool = {}
+                    for i, j in ipairs(G.hand.cards) do
+                        local card = G.hand.cards[i]
+                        if not card.edition and (card ~= self) then
+                            table.insert(pool, card)
+                        end
+                    end
+                    if #pool > 0 then
+                        if pseudorandom('joker') < G.GAME.probabilities.normal/config_thing.odds then
+                            local card = pseudorandom_element(pool, pseudoseed('aura_joker'))
+                            local edition = poll_edition('wheel_of_fortune', nil, false, true, {'e_polychrome', 'e_holo', 'e_foil'})
+                            card:set_edition(edition)
+                        else
+                            card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_nope_ex'), colour = G.C.SECONDARY_SET.Tarot})
+                        end
+                    end
+                end
             elseif context.does_score then
                 if name == "Double Up" then
                     return true
