@@ -28,6 +28,90 @@ SMODS.Atlas({ key = "trading", atlas_table = "ASSET_ATLAS", path = "cards.png", 
 
 SMODS.Atlas({ key = "tarots", atlas_table = "ASSET_ATLAS", path = "tarots.png", px = 71, py = 95})
 
+SMODS.current_mod.custom_collection_tabs = function()
+	return { UIBox_button {
+        count = G.ACTIVE_MOD_UI and 0,
+        button = 'your_collection_trading_cards', label = {"Cards"}, minw = 5, id = 'your_collection_trading_cards'
+    }}
+end
+
+function create_UIBox_Trading()
+    local deck_tables = {}
+
+    G.your_collection = {}
+    for j = 1, 2 do
+      G.your_collection[j] = CardArea(
+        G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
+        (5.25)*G.CARD_W,
+        1*G.CARD_H, 
+        {card_limit = 5, type = 'title', highlight_limit = 0, collection = true})
+      table.insert(deck_tables, 
+      {n=G.UIT.R, config={align = "cm", padding = 0, no_fill = true}, nodes={
+        {n=G.UIT.O, config={object = G.your_collection[j]}}
+      }}
+      )
+    end
+
+    local tarot_options = {}
+    for i = 1, math.ceil(#G.P_CENTER_POOLS['Exotic']/20) do
+      table.insert(tarot_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#G.P_CENTER_POOLS['Exotic']/20)))
+    end
+  
+    for j = 1, #G.your_collection do
+        for i = 1, 5 do
+            if (i+(j-1)*(5)) <= #G.P_CENTER_POOLS['Exotic'] then
+                local trading = G.P_CENTER_POOLS['Exotic'][i+(j-1)*(5)]
+                local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, nil, G.P_CENTERS.c_base)
+                card:start_materialize(nil, i>1 or j>1)
+                card:set_ability(G.P_CENTERS["m_pc_trading"], true)
+                card.ability.trading = copy_table(trading)
+                card:set_sprites(card.config.center)
+                G.your_collection[j]:emplace(card)
+            end
+        end
+    end
+  
+    INIT_COLLECTION_CARD_ALERTS()
+    
+    local t = create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {
+              {n=G.UIT.R, config={align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes=deck_tables},
+                    {n=G.UIT.R, config={align = "cm"}, nodes={
+                      create_option_cycle({options = tarot_options, w = 4.5, cycle_shoulders = true, opt_callback = 'your_collection_trading_page', focus_args = {snap_to = true, nav = 'wide'},current_option = 1, colour = G.C.RED, no_pips = true})
+                    }}
+            }})
+    return t
+end
+
+G.FUNCS.your_collection_trading_cards = function(e)
+	G.SETTINGS.paused = true
+	G.FUNCS.overlay_menu{
+	  definition = create_UIBox_Trading(),
+	}
+end
+
+G.FUNCS.your_collection_trading_page = function(args)
+    if not args or not args.cycle_config then return end
+    for j = 1, #G.your_collection do
+        for i = #G.your_collection[j].cards,1, -1 do
+            local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+            c:remove()
+            c = nil
+        end
+    end
+    for i = 1, 5 do
+        for j = 1, #G.your_collection do
+            local trading = G.P_CENTER_POOLS['Exotic'][i+(j-1)*5 + (5*#G.your_collection*(args.cycle_config.current_option - 1))]
+            if not trading then break end
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, nil, G.P_CENTERS.c_base)
+            card:set_ability(G.P_CENTERS["m_pc_trading"], true)
+            card.ability.trading = copy_table(trading)
+            card:set_sprites(card.config.center)
+            G.your_collection[j]:emplace(card)
+        end
+    end
+    INIT_COLLECTION_CARD_ALERTS()
+end
+
 function Card:calculate_exotic(context, do_repeat)
     local new_do_repeat = {self}
     if do_repeat then
@@ -114,6 +198,11 @@ function Card:calculate_exotic(context, do_repeat)
                         mult = valid and config_thing.mult or nil,
                         card = self
                     })
+                elseif name == "Eye Card" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
                 end
             elseif context.does_score then
                 if name == "Double Up" then
@@ -123,6 +212,10 @@ function Card:calculate_exotic(context, do_repeat)
             elseif context.is_suit then
                 if name == "Flint Card" then
                     if (context.is_suit == "Hearts") or (context.is_suit == "Diamonds") then
+                        return true
+                    end
+                elseif name == "Eye Card" then
+                    if (context.is_suit == "Clubs") or (context.is_suit == "Spades") then
                         return true
                     end
                 end
@@ -273,6 +366,37 @@ SMODS.Tarot {
     end,
     loc_vars = function(self, info_queue, card)
         return {vars = {card and card.ability.consumeable.max_highlighted or 1} }
+    end
+}
+
+SMODS.Back {
+    key = 'Collected',
+    loc_txt = {
+        name = "Collected Deck",
+        text = {
+            "Start with {C:attention}2{}",
+            "extra {C:attention}Trading Cards{}"
+        }
+    },
+    name = "Stuff Deck",
+    apply = function(self)
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                for i = 1, 2 do
+                    local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
+                    card:remove()
+                end
+                for i = 1, 2 do
+                    local key = G.P_TRADING[get_trading_key()]
+                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
+                    _card.ability.trading = copy_table(key)
+                    _card:set_sprites(_card.config.center)
+                    G.deck:emplace(_card)
+                    table.insert(G.playing_cards, _card)
+                end
+            return true
+            end
+        }))
     end
 }
 
