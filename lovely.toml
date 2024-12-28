@@ -33,6 +33,8 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         loc_vars = {config_thing.retriggers}
     elseif specific_vars.collect.name == "Playable Joker" then
         loc_vars = {G.GAME.probabilities.normal, config_thing.odds}
+    elseif specific_vars.collect.name == "Sunflower" then
+        loc_vars = {config_thing.chips, config_thing.gain}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}'''
 match_indent = true
@@ -87,6 +89,7 @@ payload = '''self.P_TRADING = {
     double_up = {order = 4, key = 'double_up', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Up", pos = {x=3,y=1}, set = "CustomCard", config = {retriggers = 1}, base = "S_Q"},
     eye_card = {order = 5, key = 'eye_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Eye Card", pos = {x=4,y=1}, set = "CustomCard", config = {chips = 30}, base = "C_A"},
     playable_joker = {order = 6, key = 'playable_joker', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Playable Joker", pos = {x=0,y=0}, set = "CustomCard", config = {odds = 4}, base = "S_2"},
+    sunflower = {order = 7, key = 'sunflower', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Sunflower", pos = {x=0,y=2}, set = "CustomCard", config = {chips = 8, gain = 2}, base = "D_8"},
  }'''
 match_indent = true
 

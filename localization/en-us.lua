@@ -31,6 +31,11 @@ return {
                     "Playable Joker",
                 }
             },
+            sunflower = {
+                text = {
+                    "Sunflower",
+                }
+            },
         },
         CustomCard = {
             flint_card = {
@@ -73,6 +78,14 @@ return {
                     "{C:dark_edition}Polychrome{} edition",
                     "to a random card in {C:attention}hand"
                 }
+            },
+            sunflower = {
+                text = {
+                    "{C:attention}8{}, {C:blue}+#1#{} chips",
+                    "Gains {C:blue}+#2#{} Chips",
+                    "when {C:attention}scored",
+                    "{s:0.8,C:inactive}Suggested by .lqxy"
+                }
             }
         },
         Tarot = {
@@ -91,6 +104,11 @@ return {
                 text = {
                 }
             },
+        }
+    },
+    misc = {
+        dictionary = {
+            k_trading_pack = "Trading Pack"
         }
     }
 }

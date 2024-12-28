@@ -28,6 +28,10 @@ SMODS.Atlas({ key = "trading", atlas_table = "ASSET_ATLAS", path = "cards.png", 
 
 SMODS.Atlas({ key = "tarots", atlas_table = "ASSET_ATLAS", path = "tarots.png", px = 71, py = 95})
 
+SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "decks.png", px = 71, py = 95})
+
+SMODS.Atlas({ key = "booster", atlas_table = "ASSET_ATLAS", path = "boosters.png", px = 71, py = 95})
+
 SMODS.current_mod.custom_collection_tabs = function()
 	return { UIBox_button {
         count = G.ACTIVE_MOD_UI and 0,
@@ -61,7 +65,7 @@ function create_UIBox_Trading()
         for i = 1, 5 do
             if (i+(j-1)*(5)) <= #G.P_CENTER_POOLS['Exotic'] then
                 local trading = G.P_CENTER_POOLS['Exotic'][i+(j-1)*(5)]
-                local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, nil, G.P_CENTERS.c_base)
+                local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS[trading.base], G.P_CENTERS.c_base)
                 card:start_materialize(nil, i>1 or j>1)
                 card:set_ability(G.P_CENTERS["m_pc_trading"], true)
                 card.ability.trading = copy_table(trading)
@@ -102,7 +106,7 @@ G.FUNCS.your_collection_trading_page = function(args)
         for j = 1, #G.your_collection do
             local trading = G.P_CENTER_POOLS['Exotic'][i+(j-1)*5 + (5*#G.your_collection*(args.cycle_config.current_option - 1))]
             if not trading then break end
-            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, nil, G.P_CENTERS.c_base)
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS[trading.base], G.P_CENTERS.c_base)
             card:set_ability(G.P_CENTERS["m_pc_trading"], true)
             card.ability.trading = copy_table(trading)
             card:set_sprites(card.config.center)
@@ -203,6 +207,13 @@ function Card:calculate_exotic(context, do_repeat)
                         chips = config_thing.chips,
                         card = self
                     })
+                elseif name == "Sunflower" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
+                    config_thing.chips = config_thing.chips + config_thing.gain
+                    table.insert(effects, {extra = {message = localize{type='variable',key='a_chips',vars={config_thing.gain}}, colour = G.C.BLUE}})
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -240,12 +251,12 @@ function Card:calculate_exotic(context, do_repeat)
                 end
                 return false
             elseif context.get_id then
-                if name == "Flint Card" then
-                    return -math.random(100, 1000000)
-                elseif name == "Scholar's Mate" then
+                if name == "Scholar's Mate" then
                     return 12
                 elseif name == "Scandinavian Defense" then
                     return 12
+                elseif name == "Sunflower" then
+                    return 8
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -397,6 +408,8 @@ SMODS.Back {
             "extra {C:attention}Trading Cards{}"
         }
     },
+    atlas = "decks",
+    pos = {x = 2, y = 0},
     name = "Stuff Deck",
     apply = function(self)
         G.E_MANAGER:add_event(Event({
@@ -416,6 +429,120 @@ SMODS.Back {
             return true
             end
         }))
+    end
+}
+
+SMODS.Booster {
+    key = 'trading_normal_1',
+    atlas = 'booster',
+    group_key = 'k_trading_pack',
+    loc_txt = {
+        name = "Trading Pack",
+        text = {
+            "Choose {C:attention}#1#{} of up to",
+            "{C:attention}#2#{C:attention} Trading{} cards to",
+            "add to your deck"
+        }
+    },
+    weight = 0.9,
+    name = "Trading Pack",
+    pos = {x = 0, y = 0},
+    config = {extra = 2, choose = 1, name = "Trading Pack"},
+    create_card = function(self, card)
+        local key = G.P_TRADING[get_trading_key()]
+        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
+        _card.ability.trading = copy_table(key)
+        _card:set_sprites(_card.config.center)
+        local edition = poll_edition('trading_edition'..G.GAME.round_resets.ante, 1, true)
+        _card:set_edition(edition)
+        _card:set_seal(SMODS.poll_seal({mod = 3}))
+        return _card
+    end
+}
+
+SMODS.Booster {
+    key = 'trading_normal_2',
+    atlas = 'booster',
+    group_key = 'k_trading_pack',
+    loc_txt = {
+        name = "Trading Pack",
+        text = {
+            "Choose {C:attention}#1#{} of up to",
+            "{C:attention}#2#{C:attention} Trading{} cards to",
+            "add to your deck"
+        }
+    },
+    weight = 0.9,
+    name = "Trading Pack",
+    pos = {x = 1, y = 0},
+    config = {extra = 2, choose = 1, name = "Trading Pack"},
+    create_card = function(self, card)
+        local key = G.P_TRADING[get_trading_key()]
+        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
+        _card.ability.trading = copy_table(key)
+        _card:set_sprites(_card.config.center)
+        local edition = poll_edition('trading_edition'..G.GAME.round_resets.ante, 1, true)
+        _card:set_edition(edition)
+        _card:set_seal(SMODS.poll_seal({mod = 3}))
+        return _card
+    end
+}
+
+SMODS.Booster {
+    key = 'trading_jumbo_1',
+    atlas = 'booster',
+    group_key = 'k_trading_pack',
+    loc_txt = {
+        name = "Jumbo Trading Pack",
+        text = {
+            "Choose {C:attention}#1#{} of up to",
+            "{C:attention}#2#{C:attention} Trading{} cards to",
+            "add to your deck"
+        }
+    },
+    weight = 0.45,
+    cost = 6,
+    name = "Trading Pack",
+    pos = {x = 0, y = 1},
+    config = {extra = 4, choose = 1, name = "Trading Pack"},
+    create_card = function(self, card)
+        local key = G.P_TRADING[get_trading_key()]
+        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
+        _card.ability.trading = copy_table(key)
+        _card:set_sprites(_card.config.center)
+        local edition = poll_edition('trading_edition'..G.GAME.round_resets.ante, 1, true)
+        _card:set_edition(edition)
+        _card:set_seal(SMODS.poll_seal({mod = 3}))
+        return _card
+    end
+}
+
+SMODS.Booster {
+    key = 'trading_mega_1',
+    atlas = 'booster',
+    group_key = 'k_trading_pack',
+    loc_txt = {
+        name = "Mega Trading Pack",
+        text = {
+            "Choose {C:attention}#1#{} of up to",
+            "{C:attention}#2#{C:attention} Trading{} cards to",
+            "add to your deck"
+        }
+    },
+    weight = 0.35,
+    cost = 8,
+    name = "Trading Pack",
+    pos = {x = 1, y = 1},
+    config = {extra = 4, choose = 2, name = "Trading Pack"},
+    create_card = function(self, card)
+        local key = G.P_TRADING[get_trading_key()]
+        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
+        _card.ability.trading = copy_table(key)
+        _card:set_sprites(_card.config.center)
+        local edition = poll_edition('trading_edition'..G.GAME.round_resets.ante, 1, true)
+        _card:set_edition(edition)
+        _card:set_seal(SMODS.poll_seal({mod = 3}))
+        return _card
     end
 }
 
