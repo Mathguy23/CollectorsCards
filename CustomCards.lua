@@ -214,6 +214,11 @@ function Card:calculate_exotic(context, do_repeat)
                     })
                     config_thing.chips = config_thing.chips + config_thing.gain
                     table.insert(effects, {extra = {message = localize{type='variable',key='a_chips',vars={config_thing.gain}}, colour = G.C.BLUE}})
+                elseif name == "Wild Draw 4" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -238,6 +243,13 @@ function Card:calculate_exotic(context, do_repeat)
                 if name == "Rules Card" then
                     ease_discard(1)
                     card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_discards',vars={config_thing.discards}}, colour = G.C.RED})
+                elseif name == "Wild Draw 4" then
+                    card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
+                    local size = math.min(#G.deck.cards, config_thing.cards)
+                    for i = 1, config_thing.cards do
+                        draw_card(G.deck,G.hand, i*100/size,'up', true)
+                        delay(0.1)
+                    end
                 end
             elseif context.does_score then
                 if name == "Double Up" then
@@ -253,6 +265,8 @@ function Card:calculate_exotic(context, do_repeat)
                     if (context.is_suit == "Clubs") or (context.is_suit == "Spades") then
                         return true
                     end
+                elseif name == "Wild Draw 4" then
+                    return true
                 end
                 return false
             elseif context.get_id then
@@ -262,6 +276,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 12
                 elseif name == "Sunflower" then
                     return 8
+                elseif name == "Wild Draw 4" then
+                    return 4
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then

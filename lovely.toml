@@ -37,6 +37,8 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         loc_vars = {config_thing.chips, config_thing.gain}
     elseif specific_vars.collect.name == "Rules Card" then
         loc_vars = {config_thing.discards}
+    elseif specific_vars.collect.name == "Wild Draw 4" then
+        loc_vars = {config_thing.chips, config_thing.cards}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}'''
 match_indent = true
@@ -93,6 +95,7 @@ payload = '''self.P_TRADING = {
     playable_joker = {order = 6, key = 'playable_joker', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Playable Joker", pos = {x=0,y=0}, set = "CustomCard", config = {odds = 4}, base = "S_2"},
     sunflower = {order = 7, key = 'sunflower', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Sunflower", pos = {x=0,y=2}, set = "CustomCard", config = {chips = 8, gain = 2}, base = "D_8"},
     rules_card = {order = 8, key = 'rules_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Rules Card", pos = {x=1,y=2}, set = "CustomCard", config = {discards = 1}, base = "S_A"},
+    wild_draw_4 = {order = 9, key = 'wild_draw_4', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Wild Draw 4", pos = {x=2,y=2}, set = "CustomCard", config = {chips = 4, cards = 4}, base = "C_4"},
  }'''
 match_indent = true
 

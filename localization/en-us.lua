@@ -40,6 +40,11 @@ return {
                 text = {
                     "Rules Card"
                 }
+            },
+            wild_draw_4 = {
+                text = {
+                    "{C:hearts}W{C:spades}i{C:diamonds}l{C:clubs}d{} Draw 4"
+                }
             }
         },
         CustomCard = {
@@ -98,6 +103,12 @@ return {
                     "discards",
                     "{s:0.8,C:inactive}Suggested by Enderjed"
                 }
+            },
+            wild_draw_4 = {
+                text = {
+                    "{C:attention}4{}, {C:dark_edition}All Suits{}, {C:blue}+#1#{} chips",
+                    "On {C:attention}Play{}, Draw {C:attention}#2#{} cards",
+                }
             }
         },
         Tarot = {
@@ -123,7 +134,8 @@ return {
             k_trading_pack = "Trading Pack"
         },
         v_dictionary = {
-            a_discards = "+#1# discard"
+            a_discards = "+#1# Discard",
+            a_cards = "+#1# Cards"
         }
     }
 }
