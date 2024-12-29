@@ -234,6 +234,11 @@ function Card:calculate_exotic(context, do_repeat)
                         end
                     end
                 end
+            elseif context.before then
+                if name == "Rules Card" then
+                    ease_discard(1)
+                    card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_discards',vars={config_thing.discards}}, colour = G.C.RED})
+                end
             elseif context.does_score then
                 if name == "Double Up" then
                     return true

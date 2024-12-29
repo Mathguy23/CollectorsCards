@@ -35,6 +35,8 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         loc_vars = {G.GAME.probabilities.normal, config_thing.odds}
     elseif specific_vars.collect.name == "Sunflower" then
         loc_vars = {config_thing.chips, config_thing.gain}
+    elseif specific_vars.collect.name == "Rules Card" then
+        loc_vars = {config_thing.discards}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}'''
 match_indent = true
@@ -83,13 +85,14 @@ target = 'game.lua'
 pattern = '''self.P_LOCKED = {}'''
 position = 'after'
 payload = '''self.P_TRADING = {
-    flint_card = {order = 1, key = 'flint_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Flint Card", pos = {x=1,y=0}, set = "CustomCard", config = {mult = 4}, base = "H_A"},
+    flint_card = {order = 1, key = 'flint_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Flint Card", pos = {x=1,y=0}, set = "CustomCard", config = {mult = 5}, base = "H_A"},
     scholar_mate = {order = 2, key = 'scholar_mate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Scholar's Mate", pos = {x=3,y=0}, set = "CustomCard", config = {chips = 10, mult = 7}, base = "S_Q"},
     scandinavian_defense = {order = 3, key = 'scandinavian_defense', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Scandinavian Defense", pos = {x=2,y=0}, set = "CustomCard", config = {chips = 10, mult = 7}, base = "S_Q"},
     double_up = {order = 4, key = 'double_up', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Up", pos = {x=3,y=1}, set = "CustomCard", config = {retriggers = 1}, base = "S_Q"},
-    eye_card = {order = 5, key = 'eye_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Eye Card", pos = {x=4,y=1}, set = "CustomCard", config = {chips = 30}, base = "C_A"},
+    eye_card = {order = 5, key = 'eye_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Eye Card", pos = {x=4,y=1}, set = "CustomCard", config = {chips = 40}, base = "C_A"},
     playable_joker = {order = 6, key = 'playable_joker', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Playable Joker", pos = {x=0,y=0}, set = "CustomCard", config = {odds = 4}, base = "S_2"},
     sunflower = {order = 7, key = 'sunflower', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Sunflower", pos = {x=0,y=2}, set = "CustomCard", config = {chips = 8, gain = 2}, base = "D_8"},
+    rules_card = {order = 8, key = 'rules_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Rules Card", pos = {x=1,y=2}, set = "CustomCard", config = {discards = 1}, base = "S_A"},
  }'''
 match_indent = true
 
@@ -174,7 +177,7 @@ match_indent = true
 target = 'card.lua'
 pattern = '''function Card:can_use_consumeable(any_state, skip_check)'''
 position = 'after'
-payload = '''   if (self.ability.name == 'Strength') or self.ability.consumeable.suit_conv or self.ability.consumeable.mod_conv then 
+payload = '''   if (self.ability.name == 'Strength') or self.ability.consumeable.suit_conv then 
         for i = 1, #G.hand.highlighted do
             if G.hand.highlighted[i].ability and G.hand.highlighted[i].ability.trading then return false end
         end
@@ -282,5 +285,15 @@ position = 'after'
 payload = '''local special_eval = G.hand.highlighted[i]:calculate_exotic({discard = true, full_hand = G.hand.highlighted}, {})
 if special_eval.remove then
     eval.remove = true
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''local hand_text_set = false'''
+position = 'before'
+payload = '''for k=1, #G.play.cards do
+    G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
 end'''
 match_indent = true

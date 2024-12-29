@@ -36,6 +36,11 @@ return {
                     "Sunflower",
                 }
             },
+            rules_card = {
+                text = {
+                    "Rules Card"
+                }
+            }
         },
         CustomCard = {
             flint_card = {
@@ -85,6 +90,14 @@ return {
                     "Gains {C:blue}+#2#{} Chips",
                     "when {C:attention}scored",
                 }
+            },
+            rules_card = {
+                text = {
+                    "{C:attention}Always scores{}",
+                    "On {C:attention}Play{}, Gain {C:red}+#1#{}",
+                    "discards",
+                    "{s:0.8,C:inactive}Suggested by Enderjed"
+                }
             }
         },
         Tarot = {
@@ -108,6 +121,9 @@ return {
     misc = {
         dictionary = {
             k_trading_pack = "Trading Pack"
+        },
+        v_dictionary = {
+            a_discards = "+#1# discard"
         }
     }
 }
