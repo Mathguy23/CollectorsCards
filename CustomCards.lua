@@ -34,8 +34,9 @@ SMODS.Atlas({ key = "booster", atlas_table = "ASSET_ATLAS", path = "boosters.png
 
 SMODS.current_mod.custom_collection_tabs = function()
 	return { UIBox_button {
-        count = G.ACTIVE_MOD_UI and 0,
-        button = 'your_collection_trading_cards', label = {"Cards"}, minw = 5, id = 'your_collection_trading_cards'
+        count = G.ACTIVE_MOD_UI and modsCollectionTally(G.P_CENTER_POOLS["Exotic"]),
+        button = 'your_collection_trading_cards',
+        label = {"Cards"}, minw = 5, id = 'your_collection_trading_cards'
     }}
 end
 
