@@ -84,7 +84,6 @@ return {
                     "{C:attention}8{}, {C:blue}+#1#{} chips",
                     "Gains {C:blue}+#2#{} Chips",
                     "when {C:attention}scored",
-                    "{s:0.8,C:inactive}Suggested by .lqxy"
                 }
             }
         },
