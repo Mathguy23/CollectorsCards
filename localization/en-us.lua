@@ -45,6 +45,11 @@ return {
                 text = {
                     "{C:hearts}W{C:spades}i{C:diamonds}l{C:clubs}d{} Draw 4"
                 }
+            },
+            jack_in_a_box = {
+                text = {
+                    "Jack in a Box"
+                }
             }
         },
         CustomCard = {
@@ -108,6 +113,15 @@ return {
                 text = {
                     "{C:attention}4{}, {C:dark_edition}All Suits{}, {C:blue}+#1#{} chips",
                     "On {C:attention}Play{}, Draw {C:attention}#2#{} cards",
+                }
+            },
+            jack_in_a_box = {
+                text = {
+                    "{C:attention}Jack{}, {C:blue}+#1#{} chips",
+                    "Every {C:attention}#2#{} times this card",
+                    "{C:attention}scores{} add a {C:attention}Jack{}",
+                    "to your {C:attention}Full Deck{}",
+                    "{C:inactive}(Currently {C:attention}#3#{C:inactive}/{C:attention}#2#{C:inactive})"
                 }
             }
         },

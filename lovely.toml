@@ -39,8 +39,16 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         loc_vars = {config_thing.discards}
     elseif specific_vars.collect.name == "Wild Draw 4" then
         loc_vars = {config_thing.chips, config_thing.cards}
+    elseif specific_vars.collect.name == "Jack in a Box" then
+        loc_vars = {config_thing.chips, config_thing.scores, config_thing.scored}
     end
-    localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}'''
+    localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
+    if specific_vars.bonus_chips then
+        localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
+    end
+    if specific_vars and specific_vars.bonus_mult then
+        localize{type = 'other', key = 'card_extra_mult', nodes = desc_nodes, vars = {specific_vars.bonus_mult}}
+    end'''
 match_indent = true
 
 [[patches]]
@@ -96,6 +104,7 @@ payload = '''self.P_TRADING = {
     sunflower = {order = 7, key = 'sunflower', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Sunflower", pos = {x=0,y=2}, set = "CustomCard", config = {chips = 8, gain = 2}, base = "D_8"},
     rules_card = {order = 8, key = 'rules_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Rules Card", pos = {x=1,y=2}, set = "CustomCard", config = {discards = 1}, base = "S_A"},
     wild_draw_4 = {order = 9, key = 'wild_draw_4', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Wild Draw 4", pos = {x=2,y=2}, set = "CustomCard", config = {chips = 4, cards = 4}, base = "C_4"},
+    jack_in_a_box = {order = 10, key = 'jack_in_a_box', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Jack in a Box", pos = {x=3,y=2}, set = "CustomCard", config = {chips = 10, scores = 5, scored = 0}, base = "C_J"},
  }'''
 match_indent = true
 

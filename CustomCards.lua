@@ -220,6 +220,27 @@ function Card:calculate_exotic(context, do_repeat)
                         chips = config_thing.chips,
                         card = self
                     })
+                elseif name == "Jack in a Box" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
+                    config_thing.scored = config_thing.scored + 1
+                    if config_thing.scored >= config_thing.scores then
+                        config_thing.scored = 0
+                        table.insert(effects, {extra = {func = function()
+                            G.E_MANAGER:add_event(Event({ func = function()
+                                local suit = pseudorandom_element(SMODS.Suits, pseudoseed('jack'))
+                                local card = Card(self.T.x, self.T.y, G.CARD_W, G.CARD_H, G.P_CARDS["H_J"], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+                                SMODS.change_base(card, suit.key)
+                                card:flip()
+                                G.deck:emplace(card)
+                                table.insert(G.playing_cards, card)
+                                return true
+                            end
+                            }))
+                        end, message = "+1 " .. localize("Jack", 'ranks')}})
+                    end
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -279,6 +300,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 8
                 elseif name == "Wild Draw 4" then
                     return 4
+                elseif name == "Jack in a Box" then
+                    return 11
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
