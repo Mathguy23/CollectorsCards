@@ -306,8 +306,6 @@ function Card:calculate_exotic(context, do_repeat)
                     return true
                 elseif name == "Rules Card" then
                     return true
-                elseif name == "Blank Card" then
-                    return "remove"
                 end
                 return false
             elseif context.is_suit then
@@ -332,7 +330,7 @@ function Card:calculate_exotic(context, do_repeat)
                     return true
                 elseif name == "Playable Joker" then
                     return true
-                end
+                end	
                 return false
             elseif context.get_id then
                 if name == "Scholar's Mate" then
@@ -349,10 +347,6 @@ function Card:calculate_exotic(context, do_repeat)
                     return 2
                 elseif name == "Mane 6" then
                     return 6
-                elseif name == "Blank Card" then
-                    if config_thing.rank then
-                        return config_thing.rank
-                    end
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -645,57 +639,6 @@ SMODS.Booster {
 function get_trading_key()
     local _, key = pseudorandom_element(G.P_TRADING, pseudoseed('trading'))
     return key
-end
-
-G.FUNCS.up_rank = function(e)
-    e.config.ref_table.ability.trading.config.rank = (e.config.ref_table.ability.trading.config.rank or 1) + 1
-    if e.config.ref_table.ability.trading.config.rank == 15 then
-        e.config.ref_table.ability.trading.config.rank = 2
-    end
-    local ranks = {'', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'}
-    SMODS.change_base(e.config.ref_table, nil, ranks[e.config.ref_table.ability.trading.config.rank])
-    card_eval_status_text(e.config.ref_table, 'jokers', nil, nil, nil, {message = localize(ranks[e.config.ref_table.ability.trading.config.rank], 'ranks')})
-end
-
-G.FUNCS.down_rank = function(e)
-    e.config.ref_table.ability.trading.config.rank = (e.config.ref_table.ability.trading.config.rank or 15) - 1
-    if e.config.ref_table.ability.trading.config.rank == 1 then
-        e.config.ref_table.ability.trading.config.rank = 14
-    end
-    local ranks = {'', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'}
-    SMODS.change_base(e.config.ref_table, nil, ranks[e.config.ref_table.ability.trading.config.rank])
-    card_eval_status_text(e.config.ref_table, 'jokers', nil, nil, nil, {message = localize(ranks[e.config.ref_table.ability.trading.config.rank], 'ranks')})
-end
-
-function G.UIDEF.rank_buttons(card)
-    local sell = nil
-    local use = nil
-    use = 
-    {n=G.UIT.C, config={align = "cr"}, nodes={
-      {n=G.UIT.C, config={ref_table = card, align = "cm",maxw = 0.75, padding = 0.1, r=0.08, minw = 0.75, minh = 0.3, hover = true, shadow = true, colour = G.C.RED, button = 'up_rank'}, nodes={
-        {n=G.UIT.B, config = {w=0.1,h=0.3}},
-        {n=G.UIT.T, config={text = localize('b_up'),colour = G.C.UI.TEXT_LIGHT, scale = 0.25, shadow = true}}
-      }}
-    }}
-    sell = 
-    {n=G.UIT.C, config={align = "cr"}, nodes={
-      {n=G.UIT.C, config={ref_table = card, align = "cm",maxw = 0.75, padding = 0.1, r=0.08, minw = 0.75, minh = 0.3, hover = true, shadow = true, colour = G.C.GREEN, button = 'down_rank'}, nodes={
-        {n=G.UIT.B, config = {w=0.1,h=0.3}},
-        {n=G.UIT.T, config={text = localize('b_down'),colour = G.C.UI.TEXT_LIGHT, scale = 0.25, shadow = true}}
-      }}
-    }}
-    local t = {
-        n=G.UIT.ROOT, config = {padding = 0, colour = G.C.CLEAR}, nodes={
-        {n=G.UIT.R, config={padding = 0.15, align = 'cl'}, nodes={
-            {n=G.UIT.C, config={align = 'cl'}, nodes={
-            sell
-            }},
-            {n=G.UIT.C, config={align = 'cl'}, nodes={
-            use
-            }},
-        }},
-    }}
-    return t
 end
 
 ----------------------------------------------
