@@ -58,8 +58,8 @@ function create_UIBox_Trading()
     end
 
     local tarot_options = {}
-    for i = 1, math.ceil(#G.P_CENTER_POOLS['Exotic']/20) do
-      table.insert(tarot_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#G.P_CENTER_POOLS['Exotic']/20)))
+    for i = 1, math.ceil(#G.P_CENTER_POOLS['Exotic']/10) do
+      table.insert(tarot_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#G.P_CENTER_POOLS['Exotic']/10)))
     end
   
     for j = 1, #G.your_collection do
@@ -241,6 +241,11 @@ function Card:calculate_exotic(context, do_repeat)
                             }))
                         end, message = "+1 " .. localize("Jack", 'ranks')}})
                     end
+                elseif name == "2mbstone" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -272,9 +277,22 @@ function Card:calculate_exotic(context, do_repeat)
                         draw_card(G.deck,G.hand, i*100/size,'up', true)
                         delay(0.1)
                     end
+                elseif name == "2mbstone" then
+                    if pseudorandom('tom') < G.GAME.probabilities.normal/config_thing.odds then
+                        card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
+                        G.E_MANAGER:add_event(Event({func = function()
+                            if G.consumeables.config.card_limit > #G.consumeables.cards then
+                                local card = create_card('', G.consumeables, nil, nil, nil, nil, 'c_death', 'fool')
+                                card:add_to_deck()
+                                G.consumeables:emplace(card)
+                            end
+                        return true end }))
+                    end
                 end
             elseif context.does_score then
                 if name == "Double Up" then
+                    return true
+                elseif name == "Rules Card" then
                     return true
                 end
                 return false
@@ -291,6 +309,16 @@ function Card:calculate_exotic(context, do_repeat)
                     return true
                 end
                 return false
+            elseif context.is_face then
+                if name == "Scholar's Mate" then
+                    return true
+                elseif name == "Scandinavian Defense" then
+                    return true
+                elseif name == "Jack in a Box" then
+                    return true
+                elseif name == "Playable Joker" then
+                    return true
+                end
             elseif context.get_id then
                 if name == "Scholar's Mate" then
                     return 12
@@ -302,6 +330,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 4
                 elseif name == "Jack in a Box" then
                     return 11
+                elseif name == "2mbstone" then
+                    return 2
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then

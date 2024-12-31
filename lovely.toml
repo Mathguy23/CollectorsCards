@@ -33,6 +33,9 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         loc_vars = {config_thing.retriggers}
     elseif specific_vars.collect.name == "Playable Joker" then
         loc_vars = {G.GAME.probabilities.normal, config_thing.odds}
+        info_queue[#info_queue + 1] = G.P_CENTERS['e_foil']
+        info_queue[#info_queue + 1] = G.P_CENTERS['e_holo']
+        info_queue[#info_queue + 1] = G.P_CENTERS['e_polychrome']
     elseif specific_vars.collect.name == "Sunflower" then
         loc_vars = {config_thing.chips, config_thing.gain}
     elseif specific_vars.collect.name == "Rules Card" then
@@ -41,6 +44,9 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         loc_vars = {config_thing.chips, config_thing.cards}
     elseif specific_vars.collect.name == "Jack in a Box" then
         loc_vars = {config_thing.chips, config_thing.scores, config_thing.scored}
+    elseif specific_vars.collect.name == "2mbstone" then
+        loc_vars = {config_thing.chips, G.GAME.probabilities.normal, config_thing.odds}
+        info_queue[#info_queue + 1] = G.P_CENTERS['c_death']
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -105,6 +111,7 @@ payload = '''self.P_TRADING = {
     rules_card = {order = 8, key = 'rules_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Rules Card", pos = {x=1,y=2}, set = "CustomCard", config = {discards = 1}, base = "S_A"},
     wild_draw_4 = {order = 9, key = 'wild_draw_4', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Wild Draw 4", pos = {x=2,y=2}, set = "CustomCard", config = {chips = 4, cards = 4}, base = "C_4"},
     jack_in_a_box = {order = 10, key = 'jack_in_a_box', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Jack in a Box", pos = {x=3,y=2}, set = "CustomCard", config = {chips = 10, scores = 5, scored = 0}, base = "C_J"},
+    tombstone = {order = 11, key = 'tombstone', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "2mbstone", pos = {x=4,y=2}, set = "CustomCard", config = {chips = 2, odds = 3}, base = "S_2"},
  }'''
 match_indent = true
 
@@ -308,4 +315,17 @@ position = 'before'
 payload = '''for k=1, #G.play.cards do
     G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:is_face(from_boss)'''
+position = 'after'
+payload = '''if self.ability and self.ability.trading then
+        local eval = self:calculate_exotic({from_boss = from_boss, is_face = true})
+        if eval then
+            return eval
+        end
+    end'''
 match_indent = true

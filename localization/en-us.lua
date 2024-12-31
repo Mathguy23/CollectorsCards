@@ -50,7 +50,12 @@ return {
                 text = {
                     "Jack in a Box"
                 }
-            }
+            },
+            tombstone = {
+                text = {
+                    "2mbstone"
+                }
+            },
         },
         CustomCard = {
             flint_card = {
@@ -123,7 +128,16 @@ return {
                     "to your {C:attention}Full Deck{}",
                     "{C:inactive}(Currently {C:attention}#3#{C:inactive}/{C:attention}#2#{C:inactive})"
                 }
-            }
+            },
+            tombstone = {
+                text = {
+                    "{C:attention}2{}, {C:blue}+#1#{} chips",
+                    "{C:green}#2# in #3#{} chance to create",
+                    "{C:tarot}Death{} when played",
+                    "{C:inactive}(Must have room)",
+                    "{s:0.8,C:inactive}Suggested by Bapphic"
+                }
+            },
         },
         Tarot = {
             c_pc_exchange = {
