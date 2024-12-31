@@ -47,6 +47,8 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
     elseif specific_vars.collect.name == "2mbstone" then
         loc_vars = {config_thing.chips, G.GAME.probabilities.normal, config_thing.odds}
         info_queue[#info_queue + 1] = G.P_CENTERS['c_death']
+    elseif specific_vars.collect.name == "Mane 6" then
+        loc_vars = {config_thing.chips, config_thing.x_mult}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -112,6 +114,7 @@ payload = '''self.P_TRADING = {
     wild_draw_4 = {order = 9, key = 'wild_draw_4', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Wild Draw 4", pos = {x=2,y=2}, set = "CustomCard", config = {chips = 4, cards = 4}, base = "C_4"},
     jack_in_a_box = {order = 10, key = 'jack_in_a_box', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Jack in a Box", pos = {x=3,y=2}, set = "CustomCard", config = {chips = 10, scores = 5, scored = 0}, base = "C_J"},
     tombstone = {order = 11, key = 'tombstone', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "2mbstone", pos = {x=4,y=2}, set = "CustomCard", config = {chips = 2, odds = 3}, base = "S_2"},
+    mane_6 = {order = 12, key = 'mane_6', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Mane 6", pos = {x=0,y=3}, set = "CustomCard", config = {chips = 6, x_mult = 0.25}, base = "H_6"},
  }'''
 match_indent = true
 

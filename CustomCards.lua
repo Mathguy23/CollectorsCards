@@ -246,6 +246,18 @@ function Card:calculate_exotic(context, do_repeat)
                         chips = config_thing.chips,
                         card = self
                     })
+                elseif name == "Mane 6" then
+                    local total_x_mult = 1
+                    for j = 1, #G.play.cards do
+                        if (G.play.cards[j] ~= self) and G.play.cards[j].ability and G.play.cards[j].ability.trading and (G.play.cards[j].ability.trading.name == "Mane 6") then
+                            total_x_mult = total_x_mult + config_thing.x_mult
+                        end
+                    end
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        x_mult = (total_x_mult ~= 1) and total_x_mult or nil,
+                        card = self
+                    })
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -332,6 +344,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 11
                 elseif name == "2mbstone" then
                     return 2
+                elseif name == "Mane 6" then
+                    return 6
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then

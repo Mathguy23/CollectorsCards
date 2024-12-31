@@ -56,6 +56,11 @@ return {
                     "2mbstone"
                 }
             },
+            mane_6 = {
+                text = {
+                    "Mane 6",
+                }
+            },
         },
         CustomCard = {
             flint_card = {
@@ -117,7 +122,7 @@ return {
             wild_draw_4 = {
                 text = {
                     "{C:attention}4{}, {C:dark_edition}All Suits{}, {C:blue}+#1#{} chips",
-                    "On {C:attention}Play{}, Draw {C:attention}#2#{} cards",
+                    "Draw {C:attention}#2#{} cards",
                 }
             },
             jack_in_a_box = {
@@ -132,10 +137,19 @@ return {
             tombstone = {
                 text = {
                     "{C:attention}2{}, {C:blue}+#1#{} chips",
-                    "{C:green}#2# in #3#{} chance to create",
-                    "{C:tarot}Death{} when played",
+                    "On {C:attention}Play{}, {C:green}#2# in #3#{} chance",
+                    "to create {C:tarot}Death{}",
                     "{C:inactive}(Must have room)",
                     "{s:0.8,C:inactive}Suggested by Bapphic"
+                }
+            },
+            mane_6 = {
+                text = {
+                    "{C:attention}6{}, {C:blue}+#1#{} chips",
+                    "Gives {X:red,C:white} X#2# {} Mult for",
+                    "every {C:attention}other Mane 6{} in",
+                    "played hand",
+                    "{s:0.8,C:inactive}Suggested by Twilight & Sunset"
                 }
             },
         },
