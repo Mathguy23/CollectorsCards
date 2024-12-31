@@ -49,6 +49,9 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         info_queue[#info_queue + 1] = G.P_CENTERS['c_death']
     elseif specific_vars.collect.name == "Mane 6" then
         loc_vars = {config_thing.chips, config_thing.x_mult}
+    elseif specific_vars.collect.name == "Blank Card" then
+        local ranks = {'', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'}
+        loc_vars = {config_thing.rank and localize(ranks[config_thing.rank], 'ranks') or "None"}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -115,6 +118,7 @@ payload = '''self.P_TRADING = {
     jack_in_a_box = {order = 10, key = 'jack_in_a_box', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Jack in a Box", pos = {x=3,y=2}, set = "CustomCard", config = {chips = 10, scores = 5, scored = 0}, base = "C_J"},
     tombstone = {order = 11, key = 'tombstone', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "2mbstone", pos = {x=4,y=2}, set = "CustomCard", config = {chips = 2, odds = 3}, base = "S_2"},
     mane_6 = {order = 12, key = 'mane_6', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Mane 6", pos = {x=0,y=3}, set = "CustomCard", config = {chips = 6, x_mult = 0.25}, base = "H_6"},
+    blank_card = {order = 13, key = 'blank_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Blank Card", pos = {x=1,y=3}, set = "CustomCard", config = {}, base = "H_A"},
  }'''
 match_indent = true
 
@@ -155,14 +159,26 @@ position = 'before'
 payload = '''for k=1, #G.play.cards do
     local eval = G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_name = text, poker_hands = poker_hands, does_score = true})
     if eval then
-        local inside = false
-        for j=1, #scoring_hand do
-            if scoring_hand[j] == G.play.cards[k] then
-                inside = true
+        if eval == "remove" then
+            local inside = false
+            for j=1, #scoring_hand do
+                if scoring_hand[j] == G.play.cards[k] then
+                    inside = j
+                end
             end
-        end
-        if not inside then
-            table.insert(scoring_hand, G.play.cards[k])
+            if inside then
+                table.remove(scoring_hand, inside)
+            end
+        else
+            local inside = false
+            for j=1, #scoring_hand do
+                if scoring_hand[j] == G.play.cards[k] then
+                    inside = true
+                end
+            end
+            if not inside then
+                table.insert(scoring_hand, G.play.cards[k])
+            end
         end
     end
 end'''
@@ -331,4 +347,36 @@ payload = '''if self.ability and self.ability.trading then
             return eval
         end
     end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.children.use_button then self.children.use_button:remove(); self.children.use_button = nil end'''
+position = 'after'
+payload = '''if self.children.rank_button then self.children.use_button:remove(); self.children.rank_button = nil end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''self.highlighted = is_higlighted'''
+position = 'after'
+payload = '''if self.playing_card then
+    if self.highlighted and self.ability and self.ability.trading and (self.ability.trading.name == "Blank Card") and (self.area == G.hand) then
+        self.children.rank_button = UIBox{
+            definition = G.UIDEF.rank_buttons(self), 
+            config = {align=
+                    ((self.area == G.jokers) or (self.area == G.consumeables)) and "cr" or
+                    "bmi"
+                , offset = 
+                    ((self.area == G.jokers) or (self.area == G.consumeables)) and {x= - 0.4,y=-0.25*G.CARD_H} or
+                    {x=0,y=0.65},
+                parent =self}
+        }
+    elseif self.children.rank_button then
+        self.children.rank_button:remove()
+        self.children.rank_button = nil
+    end
+end'''
 match_indent = true

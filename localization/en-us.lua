@@ -61,6 +61,11 @@ return {
                     "Mane 6",
                 }
             },
+            blank_card = {
+                text = {
+                    "Blank Card",
+                }
+            },
         },
         CustomCard = {
             flint_card = {
@@ -152,6 +157,14 @@ return {
                     "{s:0.8,C:inactive}Suggested by Twilight & Sunset"
                 }
             },
+            blank_card = {
+                text = {
+                    "{C:red}Never scores{}",
+                    "May be any rank",
+                    "from {C:attention}2 - Ace{}",
+                    "{C:inactive}(Currently {C:attention}#1#{C:inactive})",
+                }
+            },
         },
         Tarot = {
             c_pc_exchange = {
@@ -173,11 +186,13 @@ return {
     },
     misc = {
         dictionary = {
-            k_trading_pack = "Trading Pack"
+            k_trading_pack = "Trading Pack",
+            b_up = "+",
+            b_down = "-"
         },
         v_dictionary = {
             a_discards = "+#1# Discard",
-            a_cards = "+#1# Cards"
+            a_cards = "+#1# Cards",
         }
     }
 }
