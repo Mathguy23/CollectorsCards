@@ -4,3 +4,4 @@ Cards added by Suggestion:
  - Sunflower, .lqxy
  - Rules Card, Enderjed
  - 2mbstone, Bapphic
+ - Mane 6, Twilight & Sunset
