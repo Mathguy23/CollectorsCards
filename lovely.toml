@@ -56,7 +56,7 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         info_queue[#info_queue+1] = {key = 'perishable', set = 'Other', vars = {G.GAME.perishable_rounds or 1, G.GAME.perishable_rounds or 1}}
         loc_vars = {config_thing.chips, config_thing.scores, math.max(0, config_thing.scores - config_thing.scored)}
     elseif specific_vars.collect.name == "Golden Ratio" then
-        loc_vars = {localize("Diamonds", 'suits_plural'), config_thing.dollars}
+        loc_vars = {localize("Diamonds", 'suits_plural'), localize("2", 'ranks'), localize("3", 'ranks'), localize("5", 'ranks'), localize("8", 'ranks'), localize("Ace", 'ranks'), tostring(config_thing.x_mult), config_thing.dollars}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -125,6 +125,7 @@ payload = '''self.P_TRADING = {
     mane_6 = {order = 12, key = 'mane_6', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Mane 6", pos = {x=0,y=3}, set = "CustomCard", config = {chips = 6, x_mult = 0.25}, base = "H_6"},
     blank_card = {order = 13, key = 'blank_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Blank Card", pos = {x=1,y=3}, set = "CustomCard", config = {}, base = "H_A"},
     colon_3 = {order = 14, key = 'colon_3', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = ":3", pos = {x=2,y=3}, set = "CustomCard", config = {chips = 3, scores = 33, scored = 0}, base = "D_3"},
+    golden_ratio = {order = 15, key = 'golden_ratio', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Golden Ratio", pos = {x=3,y=3}, set = "CustomCard", config = {dollars = 1, x_mult = 1.618}, base = "D_2"},
  }'''
 match_indent = true
 

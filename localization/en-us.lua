@@ -189,10 +189,9 @@ return {
             golden_ratio = {
                 text = {
                     "{C:diamonds}#1#{}",
-                    "For each {C:attention}consecutive digit{} starting",
-                    "at the {C:attention}ones place{}, the current",
-                    "{C:blue}Chips{}/{C:red}Mult{} shares with the",
-                    "{C:money}golden ratio{} earn {C:money}$#2#{}",
+                    "First played {C:attention}#2#{}, {C:attention}#3#{}, {C:attention}#4#{}, {C:attention}#5#{},",
+                    "or {C:attention}#6#{} gives {X:red,C:money} X#7#{} Mult",
+                    "and earns {C:money}$#8#{} when scored",
                 },
             },
         },

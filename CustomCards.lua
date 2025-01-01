@@ -171,8 +171,21 @@ function Card:calculate_exotic(context, do_repeat)
             local config_thing = self.ability.trading.config
             if context.individual and (context.cardarea == G.play) then
                 if self.area == G.play then
-                    if name == "Flint Card" then
-                        if context.other_card ~= self then
+                    if name == "Golden Ratio" then
+                        local first_fib = nil
+                        for j = 1, #context.scoring_hand do
+                            local id = context.scoring_hand[j]:get_id()
+                            if (id == 2) or (id == 3) or (id == 5) or (id == 8) or (id == 14) then
+                                first_fib = context.scoring_hand[j]
+                                break
+                            end
+                        end
+                        if context.other_card == first_fib then
+                            table.insert(effects, {
+                                dollars = config_thing.dollars,
+                                x_mult = config_thing.x_mult,
+                                card = self
+                            })
                         end
                     end
                 elseif self.area == G.hand then
@@ -275,29 +288,6 @@ function Card:calculate_exotic(context, do_repeat)
                                 G.jokers:emplace(card)
                             end
                         return true end, message = "+1 " .. localize("k_legendary")}))
-                    end
-                elseif name == "Golden Ratio" then
-                    local div = to_number and to_number(hand_chips / mult) or (hand_chips / mult)
-                    local ratio = (1 + math.sqrt(5)) / 2
-                    local digit = 0
-                    while true do
-                        local digit1 = math.floor(math.fmod(div * (10^digit), 10))
-                        local digit2 = math.floor(math.fmod(ratio * (10^digit), 10))
-                        if (digit1 == digit2) or (digit > 10) then
-                            digit = digit + 1
-                        else
-                            break
-                        end
-                    end
-                    if digit == 11 then
-                        table.insert(effects, {extra = {message = localize("k_perfect_gold")}})
-                        digit = 10
-                    end
-                    if digit ~= 0 then
-                        table.insert(effects, {
-                            dollars = digit * config_thing.dollars,
-                            card = self
-                        })
                     end
                 end
             elseif context.discard then
