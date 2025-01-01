@@ -319,6 +319,9 @@ pattern = '''function Card:set_ability(center, initial, delay_sprites)'''
 position = 'after'
 payload = '''   if self.ability and self.ability.trading and (center ~= G.P_CENTERS["m_pc_trading"]) then
         self.ability.trading = nil
+    elseif (not self.ability or not self.ability.trading) and (center == G.P_CENTERS["m_pc_trading"]) then
+        local key = G.P_TRADING[get_trading_key()]
+        self.ability.trading = copy_table(key)
     end'''
 match_indent = true
 
