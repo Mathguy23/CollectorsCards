@@ -55,6 +55,8 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
     elseif specific_vars.collect.name == ":3" then
         info_queue[#info_queue+1] = {key = 'perishable', set = 'Other', vars = {G.GAME.perishable_rounds or 1, G.GAME.perishable_rounds or 1}}
         loc_vars = {config_thing.chips, config_thing.scores, math.max(0, config_thing.scores - config_thing.scored)}
+    elseif specific_vars.collect.name == "Golden Ratio" then
+        loc_vars = {localize("Diamonds", 'suits_plural'), config_thing.dollars}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then

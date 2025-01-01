@@ -71,6 +71,11 @@ return {
                     ":3",
                 }
             },
+            golden_ratio = {
+                text = {
+                    "Golden Ratio",
+                }
+            },
         },
         CustomCard = {
             flint_card = {
@@ -176,9 +181,19 @@ return {
                     "Create a {C:attention}Perishable{} {C:legendary,E:1}Legendary{}",
                     "{C:attention}Joker{} after this card scores",
                     "{C:attention}#2#{} times and {S:1.1,C:red,E:2}self destructs{}",
+                    "{C:inactive}(Must have room)",
                     "{C:inactive}({C:attention}#3#{C:inactive} Left)",
                     "{s:0.8,C:inactive}Suggested by SMG9000"
                 }
+            },
+            golden_ratio = {
+                text = {
+                    "{C:diamonds}#1#{}",
+                    "For each {C:attention}consecutive digit{} starting",
+                    "at the {C:attention}ones place{}, the current",
+                    "{C:blue}Chips{}/{C:red}Mult{} shares with the",
+                    "{C:money}golden ratio{} earn {C:money}$#2#{}",
+                },
             },
         },
         Tarot = {
@@ -203,7 +218,8 @@ return {
         dictionary = {
             k_trading_pack = "Trading Pack",
             b_up = "+",
-            b_down = "-"
+            b_down = "-",
+            k_perfect_gold = "Golden!"
         },
         v_dictionary = {
             a_discards = "+#1# Discard",

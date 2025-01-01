@@ -276,6 +276,29 @@ function Card:calculate_exotic(context, do_repeat)
                             end
                         return true end, message = "+1 " .. localize("k_legendary")}))
                     end
+                elseif name == "Golden Ratio" then
+                    local div = to_number and to_number(hand_chips / mult) or (hand_chips / mult)
+                    local ratio = (1 + math.sqrt(5)) / 2
+                    local digit = 0
+                    while true do
+                        local digit1 = math.floor(math.fmod(div * (10^digit), 10))
+                        local digit2 = math.floor(math.fmod(ratio * (10^digit), 10))
+                        if (digit1 == digit2) or (digit > 10) then
+                            digit = digit + 1
+                        else
+                            break
+                        end
+                    end
+                    if digit == 11 then
+                        table.insert(effects, {extra = {message = localize("k_perfect_gold")}})
+                        digit = 10
+                    end
+                    if digit ~= 0 then
+                        table.insert(effects, {
+                            dollars = digit * config_thing.dollars,
+                            card = self
+                        })
+                    end
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -345,6 +368,10 @@ function Card:calculate_exotic(context, do_repeat)
                     end
                 elseif name == "Wild Draw 4" then
                     return true
+                elseif name == "Golden Ratio" then
+                    if ((context.is_suit == "Hearts") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Diamonds") then
+                        return true
+                    end
                 end
                 return false
             elseif context.is_face then
