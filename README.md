@@ -5,3 +5,4 @@ Cards added by Suggestion:
  - Rules Card, Enderjed
  - 2mbstone, Bapphic
  - Mane 6, Twilight & Sunset
+ - :3, SMG9000
