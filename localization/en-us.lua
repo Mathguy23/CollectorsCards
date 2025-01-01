@@ -66,6 +66,11 @@ return {
                     "Blank Card",
                 }
             },
+            colon_3 = {
+                text = {
+                    ":3",
+                }
+            },
         },
         CustomCard = {
             flint_card = {
@@ -163,6 +168,16 @@ return {
                     "May be any rank",
                     "from {C:attention}2 - Ace{}",
                     "{C:inactive}(Currently {C:attention}#1#{C:inactive})",
+                }
+            },
+            colon_3 = {
+                text = {
+                    "{C:attention}3{}, {C:blue}+#1#{} chips",
+                    "Create a {C:attention}Perishable{} {C:legendary,E:1}Legendary{}",
+                    "{C:attention}Joker{} after this card scores",
+                    "{C:attention}#2#{} times and {S:1.1,C:red,E:2}self destructs{}",
+                    "{C:inactive}({C:attention}#3#{C:inactive} Left)",
+                    "{s:0.8,C:inactive}Suggested by SMG9000"
                 }
             },
         },

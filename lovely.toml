@@ -52,6 +52,9 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
     elseif specific_vars.collect.name == "Blank Card" then
         local ranks = {'', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'}
         loc_vars = {config_thing.rank and localize(ranks[config_thing.rank], 'ranks') or "None"}
+    elseif specific_vars.collect.name == ":3" then
+        info_queue[#info_queue+1] = {key = 'perishable', set = 'Other', vars = {G.GAME.perishable_rounds or 1, G.GAME.perishable_rounds or 1}}
+        loc_vars = {config_thing.chips, config_thing.scores, math.max(0, config_thing.scores - config_thing.scored)}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -119,6 +122,7 @@ payload = '''self.P_TRADING = {
     tombstone = {order = 11, key = 'tombstone', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "2mbstone", pos = {x=4,y=2}, set = "CustomCard", config = {chips = 2, odds = 3}, base = "S_2"},
     mane_6 = {order = 12, key = 'mane_6', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Mane 6", pos = {x=0,y=3}, set = "CustomCard", config = {chips = 6, x_mult = 0.25}, base = "H_6"},
     blank_card = {order = 13, key = 'blank_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Blank Card", pos = {x=1,y=3}, set = "CustomCard", config = {}, base = "H_A"},
+    colon_3 = {order = 14, key = 'colon_3', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = ":3", pos = {x=2,y=3}, set = "CustomCard", config = {chips = 3, scores = 33, scored = 0}, base = "D_3"},
  }'''
 match_indent = true
 
@@ -428,4 +432,22 @@ payload = '''if self.ability and self.ability.trading then
     end
 	return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val + (self.base.suit_nominal_original or 0)*0.0001*mult
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if destroyed then'''
+position = 'before'
+payload = '''if scoring_hand[i]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards}) == true then destroyed = true end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:set_perishable(_perishable)'''
+position = 'after'
+payload = '''   if self.ability.force_perish then
+        return
+    end'''
 match_indent = true

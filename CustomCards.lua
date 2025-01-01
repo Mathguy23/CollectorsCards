@@ -258,6 +258,24 @@ function Card:calculate_exotic(context, do_repeat)
                         x_mult = (total_x_mult ~= 1) and total_x_mult or nil,
                         card = self
                     })
+                elseif name == ":3" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
+                    config_thing.scored = config_thing.scored + 1
+                    if config_thing.scored == config_thing.scores then
+                        G.E_MANAGER:add_event(Event({func = function()
+                            if G.jokers.config.card_limit > #G.jokers.cards then
+                                local card = create_card('Joker', G.jokers, true, nil, nil, nil, nil, '3')
+                                card:add_to_deck()
+                                card.ability.perishable = true
+                                card.ability.perish_tally = G.GAME.perishable_rounds
+                                card.ability.force_perish = true
+                                G.jokers:emplace(card)
+                            end
+                        return true end, message = "+1 " .. localize("k_legendary")}))
+                    end
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -299,6 +317,12 @@ function Card:calculate_exotic(context, do_repeat)
                                 G.consumeables:emplace(card)
                             end
                         return true end }))
+                    end
+                end
+            elseif context.destroying_card then
+                if name == ":3" then
+                    if config_thing.scored >= config_thing.scores then
+                        return true
                     end
                 end
             elseif context.does_score then
@@ -353,6 +377,8 @@ function Card:calculate_exotic(context, do_repeat)
                     if config_thing.rank then
                         return config_thing.rank
                     end
+                elseif name == ":3" then
+                    return 3
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
