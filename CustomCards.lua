@@ -278,16 +278,20 @@ function Card:calculate_exotic(context, do_repeat)
                     })
                     config_thing.scored = config_thing.scored + 1
                     if config_thing.scored == config_thing.scores then
-                        G.E_MANAGER:add_event(Event({func = function()
-                            if G.jokers.config.card_limit > #G.jokers.cards then
-                                local card = create_card('Joker', G.jokers, true, nil, nil, nil, nil, '3')
-                                card:add_to_deck()
-                                card.ability.perishable = true
-                                card.ability.perish_tally = G.GAME.perishable_rounds
-                                card.ability.force_perish = true
-                                G.jokers:emplace(card)
+                        table.insert(effects, {extra = {func = function()
+                            G.E_MANAGER:add_event(Event({ func = function()
+                                if G.jokers.config.card_limit > #G.jokers.cards then
+                                    local card = create_card('Joker', G.jokers, true, nil, nil, nil, nil, '3')
+                                    card:add_to_deck()
+                                    card.ability.perishable = true
+                                    card.ability.perish_tally = G.GAME.perishable_rounds
+                                    card.ability.force_perish = true
+                                    G.jokers:emplace(card)
+                                end
+                                return true
                             end
-                        return true end, message = "+1 " .. localize("k_legendary")}))
+                            }))
+                        end, message = "+1 " .. localize("k_legendary")}})
                     end
                 end
             elseif context.discard then
