@@ -422,6 +422,10 @@ payload = '''if self.ability and self.ability.trading then
     if has_suit then
         s_nominal = has_suit.suit_nominal or 0
     end
-	return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val
+    if mod == 'suit' then
+        rank_mult = 1
+        r_nominal = 1
+    end
+	return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val + (self.base.suit_nominal_original or 0)*0.0001*mult
 end'''
 match_indent = true
