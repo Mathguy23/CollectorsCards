@@ -356,6 +356,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return true
                 elseif name == "Playable Joker" then
                     return true
+                elseif name == ":3" then
+                    return true
                 end
                 return false
             elseif context.get_id then
