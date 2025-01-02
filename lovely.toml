@@ -126,6 +126,7 @@ payload = '''self.P_TRADING = {
     blank_card = {order = 13, key = 'blank_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Blank Card", pos = {x=1,y=3}, set = "CustomCard", config = {}, base = "H_A"},
     colon_3 = {order = 14, key = 'colon_3', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = ":3", pos = {x=2,y=3}, set = "CustomCard", config = {chips = 3, scores = 33, scored = 0}, base = "D_3"},
     golden_ratio = {order = 15, key = 'golden_ratio', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Golden Ratio", pos = {x=3,y=3}, set = "CustomCard", config = {dollars = 1, x_mult = 1.618}, base = "D_2"},
+    double_down = {order = 16, key = 'double_down', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Down", pos = {x=4,y=3}, set = "CustomCard", config = {}, base = "H_Q"},
  }'''
 match_indent = true
 
@@ -456,4 +457,30 @@ position = 'after'
 payload = '''   if self.ability.force_perish then
         return
     end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''check_for_unlock({type = 'hand_contents', cards = G.play.cards})'''
+position = 'after'
+payload = '''G.E_MANAGER:add_event(Event({
+    trigger = 'immediate',
+        func = function()
+            for k=1, #G.play.cards do
+                G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, very_before = true})
+            end
+        return true
+    end
+}))'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if G.GAME.modifiers.debuff_played_cards then'''
+position = 'before'
+payload = '''for k=1, #G.play.cards do
+    G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true})
+end'''
 match_indent = true

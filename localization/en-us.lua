@@ -76,6 +76,11 @@ return {
                     "Golden Ratio",
                 }
             },
+            double_down = {
+                text = {
+                    "Double Down",
+                },
+            }
         },
         CustomCard = {
             flint_card = {
@@ -178,7 +183,7 @@ return {
             colon_3 = {
                 text = {
                     "{C:attention}3{}, {C:blue}+#1#{} chips",
-                    "Create a {C:attention}Perishable{} {C:legendary,E:1}Legendary{}",
+                    "Creates a {C:attention}Perishable{} {C:legendary,E:1}Legendary{}",
                     "{C:attention}Joker{} after this card scores",
                     "{C:attention}#2#{} times and {S:1.1,C:red,E:2}self destructs{}",
                     "{C:inactive}(Must have room)",
@@ -194,6 +199,13 @@ return {
                     "and earns {C:money}$#8#{} when scored",
                 },
             },
+            double_down = {
+                text = {
+                    "On {C:attention}Play{}, convert into a",
+                    "random {C:attention}played{} card for",
+                    "this {C:attention}hand{}",
+                },
+            }
         },
         Tarot = {
             c_pc_exchange = {

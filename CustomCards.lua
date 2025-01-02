@@ -135,6 +135,19 @@ function Card:calculate_exotic(context, do_repeat)
     end
     local obj = self.config.center
     local name = self.ability.trading and self.ability.trading.name
+    if self.ability and self.doubled_down and context.after then
+        self:set_ability(G.P_CENTERS["m_pc_trading"])
+        self.ability.trading = copy_table(G.P_TRADING['double_down'])
+        self:set_sprites(self.config.center)
+        local doubled = self.doubled_down
+        self.doubled_down = nil
+        self.ability = doubled.ability
+        self:set_edition(doubled.edition, true, true)
+        self:set_seal(doubled.seal, true, true)
+        self:set_base(doubled.base)
+        self:juice_up()
+        return {}
+    end
     if not name then
         if context.does_score then
             return false
@@ -342,6 +355,28 @@ function Card:calculate_exotic(context, do_repeat)
                         return true
                     end
                 end
+            elseif context.very_before then
+                if name == "Double Down" then
+                    local pool = {}
+                    for j = 1, #G.play.cards do
+                        if (G.play.cards[j] ~= self) then
+                            table.insert(pool, G.play.cards[j])
+                        end
+                    end
+                    if #pool > 0 then
+                        local card = pseudorandom_element(pool, pseudoseed('down'))
+                        local doubled = {
+                            ability = self.ability,
+                            base = self.config.card,
+                            edition = self.edition,
+                            seal = self.seal
+                        }
+                        copy_card(card, self, nil, true)
+                        self:juice_up()
+                        self.doubled_down = doubled
+                    end
+                end
+            elseif context.after then
             elseif context.does_score then
                 if name == "Double Up" then
                     return true
