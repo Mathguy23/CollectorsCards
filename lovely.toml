@@ -57,6 +57,8 @@ payload = '''elseif specific_vars and type(specific_vars.collect) == "table" the
         loc_vars = {config_thing.chips, config_thing.scores, math.max(0, config_thing.scores - config_thing.scored)}
     elseif specific_vars.collect.name == "Golden Ratio" then
         loc_vars = {localize("Diamonds", 'suits_plural'), localize("2", 'ranks'), localize("3", 'ranks'), localize("5", 'ranks'), localize("8", 'ranks'), localize("Ace", 'ranks'), tostring(config_thing.x_mult), config_thing.dollars}
+    elseif specific_vars.collect.name == "Pocket Ace" then
+        loc_vars = {localize("Spades", 'suits_plural'), localize("Ace", 'ranks'), config_thing.h_chips}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -81,7 +83,7 @@ target = 'functions/state_events.lua'
 pattern = '''scoring_hand[i].lucky_trigger = nil'''
 position = 'before'
 payload = '''for k=1, #scoring_hand do
-    local eval = scoring_hand[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})
+    local eval = scoring_hand[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true}, {})
     if eval then 
         for l = 1, #eval do
             table.insert(effects, eval[l])
@@ -89,7 +91,7 @@ payload = '''for k=1, #scoring_hand do
     end
 end
 for k=1, #G.hand.cards do
-    local eval = G.hand.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})
+    local eval = G.hand.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true}, {})
     if eval then 
         for l = 1, #eval do
             table.insert(effects, eval[l])
@@ -127,6 +129,7 @@ payload = '''self.P_TRADING = {
     colon_3 = {order = 14, key = 'colon_3', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = ":3", pos = {x=2,y=3}, set = "CustomCard", config = {chips = 3, scores = 33, scored = 0}, base = "D_3"},
     golden_ratio = {order = 15, key = 'golden_ratio', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Golden Ratio", pos = {x=3,y=3}, set = "CustomCard", config = {dollars = 1, x_mult = 1.618}, base = "D_2"},
     double_down = {order = 16, key = 'double_down', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Down", pos = {x=4,y=3}, set = "CustomCard", config = {}, base = "H_Q"},
+    pocket_ace = {order = 17, key = 'pocket_ace', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Pocket Ace", pos = {x=0,y=4}, set = "CustomCard", config = {h_chips = 14}, base = "S_A"},
  }'''
 match_indent = true
 
@@ -483,4 +486,155 @@ position = 'before'
 payload = '''for k=1, #G.play.cards do
     G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true})
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''for i=1, #G.hand.cards do'''
+position = 'after'
+payload = '''   local pc_in_hand = true'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''for i=1, #scoring_hand do'''
+position = 'after'
+payload = '''   local pc_in_scoring = true'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if reps[j] == 1 then'''
+position = 'before'
+payload = '''   if pc_in_hand then
+        if not pc_end_round then
+            for k=1, #scoring_hand do
+                local eval = scoring_hand[k]:calculate_exotic({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, pc_end_round = pc_end_round}, {})
+                if eval then 
+                    for l = 1, #eval do
+                        table.insert(effects, eval[l])
+                    end
+                end
+            end
+        end
+        for k=1, #G.hand.cards do
+            local eval = G.hand.cards[k]:calculate_exotic({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, pc_end_round = pc_end_round}, {})
+            if eval then 
+                for l = 1, #eval do
+                    table.insert(effects, eval[l])
+                end
+            end
+        end
+        local exotic_eval = G.hand.cards[i]:calculate_exotic({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, playing_card_hand = true, pc_end_round = pc_end_round})
+        if exotic_eval then
+            for l = 1, #exotic_eval do
+                table.insert(effects, exotic_eval[l])
+            end
+        end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''local eval = eval_card(G.hand.cards[i], {end_of_round = true,cardarea = G.hand, repetition = true, repetition_only = true})'''
+position = 'after'
+payload = '''for l=1, #G.hand.cards do
+    local eval = G.hand.cards[l]:calculate_exotic({cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, end_of_round = true}, {})
+    if next(eval) then
+        for _, minieval in ipairs(eval) do
+            if minieval.repetitions then
+                for h = 1, minieval.repetitions do
+                    reps[#reps+1] = {jokers = {
+                        message = minieval.message,
+                        card = minieval.cards[#minieval.cards],
+                        repetitions = minieval.repetitions,
+                        cards = minieval.cards,
+                    }}
+                end
+            end
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''local eval = eval_card(G.hand.cards[i], {repetition_only = true,cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true, card_effects = effects})'''
+position = 'after'
+payload = '''for l=1, #scoring_hand do
+    local eval = scoring_hand[l]:calculate_exotic({cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands}, {})
+    if next(eval) then
+        for _, minieval in ipairs(eval) do
+            if minieval.repetitions then
+                for h = 1, minieval.repetitions do
+                    reps[#reps+1] = {jokers = {
+                        message = minieval.message,
+                        card = minieval.cards[#minieval.cards],
+                        repetitions = minieval.repetitions,
+                        cards = minieval.cards,
+                    }}
+                end
+            end
+        end
+    end
+end
+for l=1, #G.hand.cards do
+    local eval = G.hand.cards[l]:calculate_exotic({cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands}, {})
+    if next(eval) then
+        for _, minieval in ipairs(eval) do
+            if minieval.repetitions then
+                for h = 1, minieval.repetitions do
+                    reps[#reps+1] = {jokers = {
+                        message = minieval.message,
+                        card = minieval.cards[#minieval.cards],
+                        repetitions = minieval.repetitions,
+                        cards = minieval.cards,
+                    }}
+                end
+            end
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''function end_round()'''
+position = 'after'
+payload = '''   local pc_end_round = true'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if effects[ii].h_mult then'''
+position = 'before'
+payload = '''
+if effects[ii].pc_h_chips then
+    mod_percent = true
+    hand_chips = mod_mult(hand_chips + effects[ii].pc_h_chips)
+    update_hand_text({delay = 0}, {chips = hand_chips})
+    card_eval_status_text(G.hand.cards[i], 'chips', effects[ii].pc_h_chips, percent)
+end
+if effects[ii].extra then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    local extras = {mult = false, hand_chips = false}
+    if effects[ii].extra.mult_mod then mult =mod_mult( mult + effects[ii].extra.mult_mod);extras.mult = true end
+    if effects[ii].extra.chip_mod then hand_chips = mod_chips(hand_chips + effects[ii].extra.chip_mod);extras.hand_chips = true end
+    if effects[ii].extra.swap then 
+        local old_mult = mult
+        mult = mod_mult(hand_chips)
+        hand_chips = mod_chips(old_mult)
+        extras.hand_chips = true; extras.mult = true
+    end
+    if effects[ii].extra.func then effects[ii].extra.func() end
+    update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+end
+'''
 match_indent = true

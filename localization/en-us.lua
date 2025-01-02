@@ -80,7 +80,12 @@ return {
                 text = {
                     "Double Down",
                 },
-            }
+            },
+            pocket_ace = {
+                text = {
+                    "Pocket Ace",
+                },
+            },
         },
         CustomCard = {
             flint_card = {
@@ -205,7 +210,15 @@ return {
                     "random {C:attention}played{} card for",
                     "this {C:attention}hand{}",
                 },
-            }
+            },
+            pocket_ace = {
+                text = {
+                    "{C:attention}Ace{}, {C:spades}#1#{}",
+                    "Each {C:attention}#2#{}",
+                    "held in hand",
+                    "gives {C:blue}+#3#{} Chips",
+                },
+            },
         },
         Tarot = {
             c_pc_exchange = {

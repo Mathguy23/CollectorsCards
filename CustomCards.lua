@@ -127,7 +127,7 @@ function Card:calculate_exotic(context, do_repeat)
     if self.debuff then
         if context.does_score then
             return false
-        elseif context.is_suit or context.get_id then
+        elseif context.is_suit or context.get_id or context.is_face then
             
         else
             return {}
@@ -151,7 +151,7 @@ function Card:calculate_exotic(context, do_repeat)
     if not name then
         if context.does_score then
             return false
-        elseif context.is_suit or context.get_id then
+        elseif context.is_suit or context.get_id or context.is_face then
             return nil
         else
             return {}
@@ -171,17 +171,18 @@ function Card:calculate_exotic(context, do_repeat)
         end
         if valid then
             if i ~= 1 then
-                table.insert(effects, {extra = {func = function()
-                    if reps[i] then
-                        if reps[i].cards then
-                            for j = 2, #reps[i].cards do
-                                card_eval_status_text(reps[i].cards[j], 'jokers', nil, nil, nil, reps[i])
-                            end
+                if reps[i] then
+                    if reps[i].cards then
+                        for j = ((context.individual) and (context.cardarea == G.play) and 2) or 1, #reps[i].cards do
+                            local m = reps[i]
+                            table.insert(effects, {extra = {func = function()
+                                card_eval_status_text(m.cards[j], 'jokers', nil, nil, nil, m)
+                            end}})
                         end
                     end
-                end}})
+                end
             end
-            local config_thing = self.ability.trading.config
+            local config_thing = self.ability.trading.config 
             if context.individual and (context.cardarea == G.play) then
                 if self.area == G.play then
                     if name == "Golden Ratio" then
@@ -197,6 +198,19 @@ function Card:calculate_exotic(context, do_repeat)
                             table.insert(effects, {
                                 dollars = config_thing.dollars,
                                 x_mult = config_thing.x_mult,
+                                card = context.other_card
+                            })
+                        end
+                    end
+                elseif self.area == G.hand then
+
+                end
+            elseif context.individual and (context.cardarea == G.hand) then
+                if self.area == G.play then
+                    if name == "Pocket Ace" then
+                        if context.other_card:get_id() == 14 then
+                            table.insert(effects, {
+                                pc_h_chips = config_thing.h_chips,
                                 card = self
                             })
                         end
@@ -401,6 +415,10 @@ function Card:calculate_exotic(context, do_repeat)
                     if ((context.is_suit == "Hearts") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Diamonds") then
                         return true
                     end
+                elseif name == "Pocket Ace" then
+                    if ((context.is_suit == "Clubs") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Spades") then
+                        return true
+                    end
                 end
                 return false
             elseif context.is_face then
@@ -437,6 +455,8 @@ function Card:calculate_exotic(context, do_repeat)
                     end
                 elseif name == ":3" then
                     return 3
+                elseif name == "Pocket Ace" then
+                    return 14
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
