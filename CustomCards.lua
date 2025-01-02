@@ -585,7 +585,7 @@ SMODS.Back {
         name = "Collected Deck",
         text = {
             "Start with {C:attention}2{}",
-            "extra {C:attention}Trading Cards{}"
+            "{C:attention}Trading Cards{}"
         }
     },
     atlas = "decks",
