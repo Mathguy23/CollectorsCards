@@ -91,6 +91,11 @@ return {
                     "Haunted Card",
                 },
             },
+            executor = {
+                text = {
+                    "Executor",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -110,14 +115,14 @@ return {
             },
             scholar_mate = {
                 text = {
-                    "{C:attention}#1#{}, {C:blue}+#2#{} Chips",
+                    "{C:attention}#1#{}, {C:blue}+#2#{} Chips, {C:attention}Face Card{}",
                     "{C:red}+#3#{} Mult when played",
                     "in the {C:attention}second{} hand",
                 }
             },
             scandinavian_defense = {
                 text = {
-                    "{C:attention}#1#{}, {C:blue}+#2#{} Chips",
+                    "{C:attention}#1#{}, {C:blue}+#2#{} Chips, {C:attention}Face Card{}",
                     "{C:red}+#3#{} Mult when played with",
                     "no {C:spades}#4#{} or {C:clubs}#5#{}",
                 }
@@ -137,6 +142,7 @@ return {
             },
             playable_joker = {
                 text = {
+                    "{C:attention}Face Card{}",
                     "On {C:attention}discard{}, {C:green}#1# in #2#{} chance to",
                     "add {C:dark_edition}Foil{}, {C:dark_edition}Holographic{}, or",
                     "{C:dark_edition}Polychrome{} edition",
@@ -166,7 +172,7 @@ return {
             },
             jack_in_a_box = {
                 text = {
-                    "{C:attention}Jack{}, {C:blue}+#1#{} chips",
+                    "{C:attention}Jack{}, {C:blue}+#1#{} chips, {C:attention}Face Card{}",
                     "Every {C:attention}#2#{} times this card",
                     "{C:attention}scores{} add a {C:attention}Jack{}",
                     "to your {C:attention}Full Deck{}",
@@ -201,7 +207,7 @@ return {
             },
             colon_3 = {
                 text = {
-                    "{C:attention}3{}, {C:blue}+#1#{} chips",
+                    "{C:attention}3{}, {C:blue}+#1#{} chips, {C:attention}Face Card{}",
                     "Creates a {C:attention}Perishable{} {C:legendary,E:1}Legendary{}",
                     "{C:attention}Joker{} after this card scores",
                     "{C:attention}#2#{} times and {S:1.1,C:red,E:2}self destructs{}",
@@ -237,6 +243,17 @@ return {
                 text = {
                     "On {C:attention}discard{}, Draw {C:attention}#1#{}",
                     "cards as {C:attention}Phantom{}"
+                },
+            },
+            executor = {
+                text = {
+                    "{C:attention}3{}, {C:blue}+#1#{} chips, {C:attention}Face Card{}",
+                    "On {C:attention}Play{}, destroy a card",
+                    "in {C:attention}hand{}. Add a permanant copy",
+                    "of this {C:attention}card{} to {C:attention}Full Deck{} every",
+                    "{C:attention}#2#{} cards destroyed",
+                    "{C:inactive}(Currently {C:attention}#3#{C:inactive}/{C:attention}#2#{C:inactive})",
+                    "{s:0.8,C:inactive}Suggested by Twilight & Sunset"
                 },
             },
         },

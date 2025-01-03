@@ -320,6 +320,11 @@ function Card:calculate_exotic(context, do_repeat)
                             }))
                         end, message = "+1 " .. localize("k_legendary")}})
                     end
+                elseif name == "Executor" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -386,6 +391,27 @@ function Card:calculate_exotic(context, do_repeat)
                                 G.consumeables:emplace(card)
                             end
                         return true end }))
+                    end
+                elseif name == "Executor" then
+                    if #G.hand.cards > 0 then
+                        local card = pseudorandom_element(G.hand.cards, pseudoseed('exec'))
+                        if card.ability and (card.ability.name == 'Glass Card') then 
+                            card:shatter()
+                        else
+                            card:start_dissolve()
+                        end
+                        config_thing.destroyed = config_thing.destroyed + 1
+                        if config_thing.destroyed >= config_thing.destroys then
+                            config_thing.destroyed = 0
+                            G.E_MANAGER:add_event(Event({ func = function()
+                                local card = copy_card(self, nil, nil, true)
+                                card:flip()
+                                G.deck:emplace(card)
+                                table.insert(G.playing_cards, card)
+                                return true
+                            end
+                            }))
+                        end
                     end
                 end
             elseif context.destroying_card then
@@ -457,6 +483,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return true
                 elseif name == ":3" then
                     return true
+                elseif name == "Executor" then
+                    return true
                 end
                 return false
             elseif context.get_id then
@@ -482,6 +510,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 3
                 elseif name == "Pocket Ace" then
                     return 14
+                elseif name == "Executor" then
+                    return 3
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
