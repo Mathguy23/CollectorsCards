@@ -344,11 +344,26 @@ function Card:calculate_exotic(context, do_repeat)
                 if name == "Haunted Card" then
                     card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
                     local size = math.min(#G.deck.cards, config_thing.cards)
-                    phantom_cards = true
+                    G.E_MANAGER:add_event(Event({
+                        trigger = 'before',
+                        delay = 0.1,
+                        func = function()
+                            phantom_cards = true
+                            return true
+                        end
+                    }))
                     for i = 1, config_thing.cards do
                         draw_card(G.deck,G.hand, i*100/size,'up', true)
                         delay(0.1)
                     end
+                    G.E_MANAGER:add_event(Event({
+                        trigger = 'before',
+                        delay = 0.1,
+                        func = function()
+                            phantom_cards = nil
+                            return true
+                        end
+                    }))
                 end
             elseif context.before then
                 if name == "Rules Card" then
