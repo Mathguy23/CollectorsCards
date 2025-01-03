@@ -340,6 +340,16 @@ function Card:calculate_exotic(context, do_repeat)
                         end
                     end
                 end
+            elseif context.pre_discard then
+                if name == "Haunted Card" then
+                    card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
+                    local size = math.min(#G.deck.cards, config_thing.cards)
+                    phantom_cards = true
+                    for i = 1, config_thing.cards do
+                        draw_card(G.deck,G.hand, i*100/size,'up', true)
+                        delay(0.1)
+                    end
+                end
             elseif context.before then
                 if name == "Rules Card" then
                     ease_discard(1)
@@ -744,6 +754,11 @@ SMODS.Booster {
         _card:set_seal(SMODS.poll_seal({mod = 3}))
         return _card
     end
+}
+
+SMODS.Shader {
+    path = 'phantom.fs',
+    key = 'phantom'
 }
 
 function get_trading_key()

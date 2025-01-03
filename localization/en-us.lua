@@ -86,6 +86,20 @@ return {
                     "Pocket Ace",
                 },
             },
+            haunted_card = {
+                text = {
+                    "Haunted Card",
+                },
+            },
+            phantom = {
+                name = "Phantom",
+                text = {
+                    "{C:red}Unplayable{}",
+                    "On {C:blue}Play{} or {C:red}Discard{}, all",
+                    "cards in hand lose",
+                    "{C:attention}Phantom{}"
+                },
+            },
         },
         CustomCard = {
             flint_card = {
@@ -217,6 +231,12 @@ return {
                     "Each {C:attention}#2#{}",
                     "held in hand",
                     "gives {C:blue}+#3#{} Chips",
+                },
+            },
+            haunted_card = {
+                text = {
+                    "On {C:attention}discard{}, Draw {C:attention}#1#{}",
+                    "cards as {C:attention}Phantom{}"
                 },
             },
         },

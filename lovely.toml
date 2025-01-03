@@ -59,6 +59,9 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
         loc_vars = {localize("Diamonds", 'suits_plural'), localize("2", 'ranks'), localize("3", 'ranks'), localize("5", 'ranks'), localize("8", 'ranks'), localize("Ace", 'ranks'), tostring(config_thing.x_mult), config_thing.dollars}
     elseif specific_vars.collect.name == "Pocket Ace" then
         loc_vars = {localize("Spades", 'suits_plural'), localize("Ace", 'ranks'), config_thing.h_chips}
+    elseif specific_vars.collect.name == "Haunted Card" then
+        info_queue[#info_queue+1] = {key = 'phantom', set = 'Other'}
+        loc_vars = {config_thing.cards}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -122,6 +125,7 @@ payload = '''self.P_TRADING = {
     golden_ratio = {order = 15, key = 'golden_ratio', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Golden Ratio", pos = {x=3,y=3}, set = "CustomCard", config = {dollars = 1, x_mult = 1.618}, base = "D_2"},
     double_down = {order = 16, key = 'double_down', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Down", pos = {x=4,y=3}, set = "CustomCard", config = {}, base = "H_Q"},
     pocket_ace = {order = 17, key = 'pocket_ace', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Pocket Ace", pos = {x=0,y=4}, set = "CustomCard", config = {h_chips = 14}, base = "S_A"},
+    haunted_card = {order = 18, key = 'haunted_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Haunted Card", pos = {x=1,y=4}, set = "CustomCard", config = {cards = 4}, base = "S_3"},
  }'''
 match_indent = true
 
@@ -329,6 +333,16 @@ position = 'after'
 payload = '''local special_eval = G.hand.highlighted[i]:calculate_exotic({discard = true, full_hand = G.hand.highlighted}, {})
 if special_eval.remove then
     eval.remove = true
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''local cards = {}'''
+position = 'before'
+payload = '''for j = 1, #G.hand.highlighted do
+    G.hand.highlighted[j]:calculate_exotic({pre_discard = true, full_hand = G.hand.highlighted}, {})
 end'''
 match_indent = true
 
@@ -646,8 +660,16 @@ pattern = '''G.FUNCS.play_cards_from_highlighted = function(e)'''
 position = 'after'
 payload = '''   
     for i = 1, #G.hand.highlighted do
-        if G.hand.cards[i].ability and G.hand.cards[i].ability.phantom then
-            G.hand.cards[i]:juice_up()
+        if G.hand.highlighted[i].ability and G.hand.highlighted[i].ability.phantom then
+            G.hand.highlighted[i]:juice_up()
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    G.STATE = G.STATES.DRAW_TO_HAND
+                    G.STATE_COMPLETE = false
+                    return true
+                end
+            }))
             return
         end
     end
@@ -656,4 +678,56 @@ payload = '''
             G.hand.cards[i].ability.phantom = nil
         end
     end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''elseif self.sprite_facing == 'back' then'''
+position = 'before'
+payload = '''if self.ability and self.ability.phantom then
+    self.children.center:draw_shader('pc_phantom', nil, self.ARGS.send_to_shader)
+    if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then
+        self.children.front:draw_shader('pc_phantom', nil, self.ARGS.send_to_shader)
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''--Fill all remaining info if this is the main desc'''
+position = 'before'
+payload = '''if card and card.ability and card.ability.phantom then info_queue[#info_queue+1] = {key = 'phantom', set = 'Other'} end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.FUNCS.discard_cards_from_highlighted = function(e, hook)'''
+position = 'after'
+payload = '''   for i = 1, #G.hand.cards do
+        if G.hand.cards[i].ability and G.hand.cards[i].ability.phantom then
+            G.hand.cards[i].ability.phantom = nil
+        end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''function Blind:stay_flipped(area, card)'''
+position = 'after'
+payload = '''   
+    if phantom_cards and (area == G.hand) then
+        card.ability.phantom = true
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''G.GAME.blind:drawn_to_hand()'''
+position = 'after'
+payload = '''phantom_cards = nil'''
 match_indent = true
