@@ -1,6 +1,6 @@
 This Mod adds Playing Cards with special abilities.
 
-Big thanks to **TheGreenDigi** for helping out with the art on many of the cards.
+Big thanks to **TheGreenDigi** for helping out with the art on many of the sprites.
 
 Cards added by Suggestion:
  - Sunflower, .lqxy
