@@ -8,3 +8,4 @@ Cards added by Suggestion:
  - 2mbstone, Bapphic
  - Mane 6, Twilight & Sunset
  - :3, SMG9000
+ - Executor, Twilight & Sunset
