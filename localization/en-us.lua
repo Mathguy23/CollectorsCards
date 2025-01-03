@@ -186,7 +186,7 @@ return {
                 text = {
                     "{C:attention}6{}, {C:blue}+#1#{} chips",
                     "Gives {X:red,C:white} X#2# {} Mult for",
-                    "every {C:attention}other Mane 6{} in",
+                    "every {C:attention}Mane 6{} in",
                     "played hand",
                     "{s:0.8,C:inactive}Suggested by Twilight & Sunset"
                 }

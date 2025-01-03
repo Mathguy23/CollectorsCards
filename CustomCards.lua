@@ -289,7 +289,7 @@ function Card:calculate_exotic(context, do_repeat)
                 elseif name == "Mane 6" then
                     local total_x_mult = 1
                     for j = 1, #G.play.cards do
-                        if (G.play.cards[j] ~= self) and G.play.cards[j].ability and G.play.cards[j].ability.trading and (G.play.cards[j].ability.trading.name == "Mane 6") then
+                        if G.play.cards[j].ability and G.play.cards[j].ability.trading and (G.play.cards[j].ability.trading.name == "Mane 6") then
                             total_x_mult = total_x_mult + config_thing.x_mult
                         end
                     end
