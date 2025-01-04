@@ -64,6 +64,8 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
         loc_vars = {config_thing.cards}
     elseif specific_vars.collect.name == "Executor" then
         loc_vars = {config_thing.chips, config_thing.destroys, config_thing.destroyed}
+    elseif specific_vars.collect.name == "Monarch" then
+        loc_vars = {config_thing.chips, localize("Hearts", 'suits_plural'), localize("Spades", 'suits_plural'), localize("Clubs", 'suits_plural')}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -129,6 +131,7 @@ payload = '''self.P_TRADING = {
     pocket_ace = {order = 17, key = 'pocket_ace', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Pocket Ace", pos = {x=0,y=4}, set = "CustomCard", config = {h_chips = 14}, base = "S_A"},
     haunted_card = {order = 18, key = 'haunted_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Haunted Card", pos = {x=1,y=4}, set = "CustomCard", config = {cards = 4}, base = "S_3"},
     executor = {order = 19, key = 'executor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Executor", pos = {x=2,y=4}, set = "CustomCard", config = {chips = 3, destroys = 3, destroyed = 0}, base = "C_3"},
+    monarch = {order = 20, key = 'monarch', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Monarch", pos = {x=3,y=4}, set = "CustomCard", config = {chips = 20}, base = "S_K"},
  }'''
 match_indent = true
 

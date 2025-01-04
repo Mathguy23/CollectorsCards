@@ -325,6 +325,11 @@ function Card:calculate_exotic(context, do_repeat)
                         chips = config_thing.chips,
                         card = self
                     })
+                elseif name == "Monarch" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
                 end
             elseif context.discard then
                 if name == "Playable Joker" then
@@ -470,6 +475,10 @@ function Card:calculate_exotic(context, do_repeat)
                     if ((context.is_suit == "Clubs") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Spades") then
                         return true
                     end
+                elseif name == "Monarch" then
+                    if (context.is_suit == "Hearts") or (context.is_suit == "Clubs") or (context.is_suit == "Spades") or ((context.is_suit == "Diamonds") and next(find_joker('Smeared Joker'))) then
+                        return true
+                    end
                 end
                 return false
             elseif context.is_face then
@@ -484,6 +493,8 @@ function Card:calculate_exotic(context, do_repeat)
                 elseif name == ":3" then
                     return true
                 elseif name == "Executor" then
+                    return true
+                elseif name == "Monarch" then
                     return true
                 end
                 return false
@@ -512,6 +523,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 14
                 elseif name == "Executor" then
                     return 3
+                elseif name == "Monarch" then
+                    return 13
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then

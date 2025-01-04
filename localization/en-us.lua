@@ -96,6 +96,11 @@ return {
                     "Executor",
                 },
             },
+            monarch = {
+                text = {
+                    "Monarch",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -254,6 +259,12 @@ return {
                     "{C:attention}#2#{} cards destroyed",
                     "{C:inactive}(Currently {C:attention}#3#{C:inactive}/{C:attention}#2#{C:inactive})",
                     "{s:0.8,C:inactive}Suggested by Twilight & Sunset"
+                },
+            },
+            monarch = {
+                text = {
+                    "{C:attention}King{}, {C:blue}+#1#{} chips, {C:attention}Face Card{},",
+                    "{C:hearts}#2#{}, {C:spades}#3#{}, and {C:clubs}#4#{}",
                 },
             },
         },
