@@ -273,9 +273,18 @@ function Card:calculate_exotic(context, do_repeat)
                                 local suit = pseudorandom_element(SMODS.Suits, pseudoseed('jack'))
                                 local card = Card(self.T.x, self.T.y, G.CARD_W, G.CARD_H, G.P_CARDS["H_J"], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
                                 SMODS.change_base(card, suit.key)
+                                local pool = {}
+                                for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
+                                    if (v.key ~= 'm_stone') and (v.key ~= 'm_pc_trading') then 
+                                        pool[#pool+1] = v
+                                    end
+                                end
+                                local center = pseudorandom_element(pool, pseudoseed('jack'))
+                                card:set_ability(center)
                                 card:flip()
                                 G.deck:emplace(card)
                                 table.insert(G.playing_cards, card)
+                                card:set_sprites(card.config.center)
                                 return true
                             end
                             }))

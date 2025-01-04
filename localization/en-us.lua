@@ -179,8 +179,8 @@ return {
                 text = {
                     "{C:attention}Jack{}, {C:blue}+#1#{} chips, {C:attention}Face Card{}",
                     "Every {C:attention}#2#{} times this card",
-                    "{C:attention}scores{} add a {C:attention}Jack{}",
-                    "to your {C:attention}Full Deck{}",
+                    "{C:attention}scores{} add an {C:attention}Enhanced{}",
+                    "{C:attention}Jack{} to your {C:attention}Full Deck{}",
                     "{C:inactive}(Currently {C:attention}#3#{C:inactive}/{C:attention}#2#{C:inactive})"
                 }
             },
