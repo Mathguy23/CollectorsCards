@@ -246,8 +246,9 @@ return {
             },
             haunted_card = {
                 text = {
-                    "On {C:attention}discard{}, Draw {C:attention}#1#{}",
-                    "cards as {C:attention}Phantom{}"
+                    "On {C:attention}discard{}, Draw",
+                    "{C:attention}#1#{} extra cards",
+                    "as {C:attention}Phantom{}"
                 },
             },
             executor = {

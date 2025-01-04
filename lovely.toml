@@ -691,3 +691,18 @@ pattern = '''G.GAME.blind:drawn_to_hand()'''
 position = 'after'
 payload = '''phantom_cards = nil'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if G.GAME.blind.name == 'The Serpent' and'''
+position = 'before'
+payload = '''if G.GAME.pc_hand_size_bonus then
+    if hand_space <= 0 then
+        hand_space = math.max(0, math.min(G.hand.config.card_limit - #G.hand.cards, 0) + G.GAME.pc_hand_size_bonus)
+    else
+        hand_space = hand_space + G.GAME.pc_hand_size_bonus
+    end
+    G.GAME.pc_hand_size_bonus = nil
+end'''
+match_indent = true

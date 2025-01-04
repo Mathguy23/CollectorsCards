@@ -371,6 +371,7 @@ function Card:calculate_exotic(context, do_repeat)
                             return true
                         end
                     }))
+                    G.GAME.pc_hand_size_bonus = (G.GAME.pc_hand_size_bonus or 0) + config_thing.cards
                     for i = 1, config_thing.cards do
                         draw_card(G.deck,G.hand, i*100/size,'up', true)
                         delay(0.1)
