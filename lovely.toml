@@ -118,7 +118,7 @@ payload = '''self.P_TRADING = {
     double_up = {order = 4, key = 'double_up', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Up", pos = {x=3,y=1}, set = "CustomCard", config = {retriggers = 1}, base = "S_Q"},
     eye_card = {order = 5, key = 'eye_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Eye Card", pos = {x=4,y=1}, set = "CustomCard", config = {chips = 40}, base = "C_A"},
     playable_joker = {order = 6, key = 'playable_joker', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Playable Joker", pos = {x=0,y=0}, set = "CustomCard", config = {odds = 4}, base = "S_2"},
-    sunflower = {order = 7, key = 'sunflower', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Sunflower", pos = {x=0,y=2}, set = "CustomCard", config = {chips = 8, gain = 2}, base = "D_8"},
+    sunflower = {order = 7, key = 'sunflower', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Sunflower", pos = {x=0,y=2}, set = "CustomCard", config = {chips = 8, gain = 6}, base = "D_8"},
     rules_card = {order = 8, key = 'rules_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Rules Card", pos = {x=1,y=2}, set = "CustomCard", config = {discards = 1}, base = "S_A"},
     wild_draw_4 = {order = 9, key = 'wild_draw_4', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Wild Draw 4", pos = {x=2,y=2}, set = "CustomCard", config = {chips = 4, cards = 4}, base = "C_4"},
     jack_in_a_box = {order = 10, key = 'jack_in_a_box', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Jack in a Box", pos = {x=3,y=2}, set = "CustomCard", config = {chips = 10, scores = 5, scored = 0}, base = "C_J"},
@@ -128,7 +128,7 @@ payload = '''self.P_TRADING = {
     colon_3 = {order = 14, key = 'colon_3', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = ":3", pos = {x=2,y=3}, set = "CustomCard", config = {chips = 3, scores = 33, scored = 0}, base = "D_3"},
     golden_ratio = {order = 15, key = 'golden_ratio', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Golden Ratio", pos = {x=3,y=3}, set = "CustomCard", config = {dollars = 1, x_mult = 1.618}, base = "D_2"},
     double_down = {order = 16, key = 'double_down', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Down", pos = {x=4,y=3}, set = "CustomCard", config = {}, base = "H_Q"},
-    pocket_ace = {order = 17, key = 'pocket_ace', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Pocket Ace", pos = {x=0,y=4}, set = "CustomCard", config = {h_chips = 14}, base = "S_A"},
+    pocket_ace = {order = 17, key = 'pocket_ace', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Pocket Ace", pos = {x=0,y=4}, set = "CustomCard", config = {h_chips = 30}, base = "S_A"},
     haunted_card = {order = 18, key = 'haunted_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Haunted Card", pos = {x=1,y=4}, set = "CustomCard", config = {cards = 4}, base = "S_3"},
     executor = {order = 19, key = 'executor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Executor", pos = {x=2,y=4}, set = "CustomCard", config = {chips = 3, destroys = 3, destroyed = 0}, base = "C_3"},
     monarch = {order = 20, key = 'monarch', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Monarch", pos = {x=3,y=4}, set = "CustomCard", config = {chips = 20}, base = "S_K"},
@@ -333,13 +333,16 @@ match_indent = true
 
 [[patches]]
 [patches.pattern]
-target = 'functions/state_events.lua'
-pattern = '''eval = eval_card(G.hand.highlighted[i], {discard = true, full_hand = G.hand.highlighted})'''
+target = 'functions/common_events.lua'
+pattern = '''function eval_card(card, context)'''
 position = 'after'
-payload = '''local special_eval = G.hand.highlighted[i]:calculate_exotic({discard = true, full_hand = G.hand.highlighted}, {})
-if special_eval.remove then
-    eval.remove = true
-end'''
+payload = '''   local special_eval = nil
+    if context.discard and (context.full_hand == G.hand.highlighted) then
+        special_eval = card:calculate_exotic({discard = true, full_hand = G.hand.highlighted}, {})
+    end
+    if special_eval and special_eval.remove then
+        ret.remove = true
+    end'''
 match_indent = true
 
 [[patches]]
@@ -404,55 +407,6 @@ payload = '''if self.playing_card then
         self.children.rank_button:remove()
         self.children.rank_button = nil
     end
-end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'card.lua'
-pattern = '''function Card:get_nominal(mod)'''
-position = 'after'
-payload = '''if self.ability and self.ability.trading then
-    local the_rank = self:calculate_exotic({get_id = true})
-    local the_suits = {}
-    local has_suit = nil
-    for i, j in pairs(SMODS.Suits) do
-        local suit_eval = self:calculate_exotic({is_suit = j.key})
-        if suit_eval then
-            the_suits[j.key] = true
-            if not has_suit then
-                has_suit = j
-            elseif j.suit_nominal > has_suit.suit_nominal then
-                has_suit = j
-            end
-        end
-    end
-    local mult = 1
-	local rank_mult = 1
-	if mod == 'suit' then mult = 10000 end
-	if (the_rank < 0) and not has_suit then 
-		mult = -10000
-	elseif not has_suit then
-		mult = 0
-	elseif (the_rank < 0) then
-		rank_mult = 0
-	end
-    local r_nominal = 0
-    local f_nominal = 0
-    if (the_rank > 0) then
-        local ranks = {'', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'}
-        r_nominal = SMODS.Ranks[ranks[the_rank]].nominal or 0
-        f_nominal = SMODS.Ranks[ranks[the_rank]].face_nominal or 0
-    end
-    local s_nominal = 0
-    if has_suit then
-        s_nominal = has_suit.suit_nominal or 0
-    end
-    if (mod == 'suit') and (the_rank < 0) then
-        rank_mult = 1
-        r_nominal = 1
-    end
-	return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val + (self.ability.trading.order or 0)*0.00000001+ s_nominal*0.0001*mult
 end'''
 match_indent = true
 

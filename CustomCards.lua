@@ -387,14 +387,13 @@ function Card:calculate_exotic(context, do_repeat)
                         delay(0.1)
                     end
                 elseif name == "2mbstone" then
-                    if pseudorandom('tom') < G.GAME.probabilities.normal/config_thing.odds then
+                    if (G.consumeables.config.card_limit > #G.consumeables.cards + G.GAME.consumeable_buffer) and (pseudorandom('tom') < G.GAME.probabilities.normal/config_thing.odds) then
                         card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
+                        G.GAME.consumeable_buffer = (G.GAME.consumeable_buffer or 0) + 1
                         G.E_MANAGER:add_event(Event({func = function()
-                            if G.consumeables.config.card_limit > #G.consumeables.cards then
-                                local card = create_card('', G.consumeables, nil, nil, nil, nil, 'c_death', 'fool')
-                                card:add_to_deck()
-                                G.consumeables:emplace(card)
-                            end
+                            local card = create_card('', G.consumeables, nil, nil, nil, nil, 'c_death', 'fool')
+                            card:add_to_deck()
+                            G.consumeables:emplace(card)
                         return true end }))
                     end
                 elseif name == "Executor" then
@@ -894,6 +893,53 @@ function G.UIDEF.rank_buttons(card)
         }},
     }}
     return t
+end
+
+local old_nominal = Card.get_nominal
+function Card:get_nominal(mod)
+    if self.ability and self.ability.trading then
+        local the_rank = self:calculate_exotic({get_id = true})
+        local the_suits = {}
+        local has_suit = nil
+        for i, j in pairs(SMODS.Suits) do
+            local suit_eval = self:calculate_exotic({is_suit = j.key})
+            if suit_eval then
+                the_suits[j.key] = true
+                if not has_suit then
+                    has_suit = j
+                elseif j.suit_nominal > has_suit.suit_nominal then
+                    has_suit = j
+                end
+            end
+        end
+        local mult = 1
+        local rank_mult = 1
+        if mod == 'suit' then mult = 10000 end
+        if (the_rank < 0) and not has_suit then 
+            mult = -10000
+        elseif not has_suit then
+            mult = 0
+        elseif (the_rank < 0) then
+            rank_mult = 0
+        end
+        local r_nominal = 0
+        local f_nominal = 0
+        if (the_rank > 0) then
+            local ranks = {'', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'}
+            r_nominal = SMODS.Ranks[ranks[the_rank]].nominal or 0
+            f_nominal = SMODS.Ranks[ranks[the_rank]].face_nominal or 0
+        end
+        local s_nominal = 0
+        if has_suit then
+            s_nominal = has_suit.suit_nominal or 0
+        end
+        if (mod == 'suit') and (the_rank < 0) then
+            rank_mult = 1
+            r_nominal = 1
+        end
+        return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val + (self.ability.trading.order or 0)*0.00000001+ s_nominal*0.0001*mult
+    end
+    return old_nominal(self, mod)
 end
 
 ----------------------------------------------
