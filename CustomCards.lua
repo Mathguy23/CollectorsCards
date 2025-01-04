@@ -650,6 +650,7 @@ SMODS.Tarot {
                 local key = get_trading_key()
                 G.hand.highlighted[i]:set_ability(G.P_CENTERS["m_pc_trading"])
                 G.hand.highlighted[i].ability.trading = copy_table(G.P_TRADING[key])
+                G.hand.highlighted[i]:set_base(G.P_CARDS[G.P_TRADING[key].base])
                 G.hand.highlighted[i]:set_sprites(G.hand.highlighted[i].config.center)
                 return true 
             end }))
