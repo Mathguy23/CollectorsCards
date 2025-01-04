@@ -394,6 +394,7 @@ function Card:calculate_exotic(context, do_repeat)
                             local card = create_card('', G.consumeables, nil, nil, nil, nil, 'c_death', 'fool')
                             card:add_to_deck()
                             G.consumeables:emplace(card)
+                            G.GAME.consumeable_buffer = 0
                         return true end }))
                     end
                 elseif name == "Executor" then
