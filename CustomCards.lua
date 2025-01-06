@@ -974,8 +974,8 @@ function Card:get_nominal(mod)
             s_nominal = has_suit.suit_nominal or 0
         end
         if (mod == 'suit') and (the_rank < 0) then
-            rank_mult = 1.999
-            r_nominal = 1
+            rank_mult = 1
+            r_nominal = 1.999
         end
         return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val + (self.ability.trading.order or 0)*0.00000001+ s_nominal*0.0001*mult
     end
