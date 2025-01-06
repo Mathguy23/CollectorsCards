@@ -101,6 +101,11 @@ return {
                     "Monarch",
                 },
             },
+            meteor = {
+                text = {
+                    "Meteor",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -108,6 +113,13 @@ return {
                     "On {C:blue}Play{} or {C:red}Discard{}, all",
                     "cards in hand lose",
                     "{C:attention}Phantom{}"
+                },
+            },
+            fleeting = {
+                name = "Fleeting",
+                text = {
+                    "{C:red}Deleted{} at end",
+                    "of {C:attention}round{}",
                 },
             },
         },
@@ -266,6 +278,14 @@ return {
                 text = {
                     "{C:attention}King{}, {C:blue}+#1#{} chips, {C:attention}Face Card{},",
                     "{C:hearts}#2#{}, {C:spades}#3#{}, and {C:clubs}#4#{}",
+                },
+            },
+            meteor = {
+                text = {
+                    "{C:blue}+#1#{} chips, {C:attention}Always Scores{}",
+                    "When {C:attention}drawn{} during a",
+                    "{C:attention}blind{}, create {C:attention}#2#{} {C:purple}Fleeting{}",
+                    "{C:attention}Stone Cards{}"
                 },
             },
         },

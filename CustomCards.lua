@@ -276,7 +276,13 @@ function Card:calculate_exotic(context, do_repeat)
                                 local pool = {}
                                 for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
                                     if (v.key ~= 'm_stone') and (v.key ~= 'm_pc_trading') then 
-                                        pool[#pool+1] = v
+                                        local valid = true
+                                        if v.in_pool and (type(v.in_pool) == "function") and not v:in_pool() then
+                                            valid = false
+                                        end
+                                        if valid then
+                                            pool[#pool+1] = v
+                                        end
                                     end
                                 end
                                 local center = pseudorandom_element(pool, pseudoseed('jack'))
@@ -335,6 +341,11 @@ function Card:calculate_exotic(context, do_repeat)
                         card = self
                     })
                 elseif name == "Monarch" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
+                elseif name == "Meteor" then
                     table.insert(effects, {
                         chips = config_thing.chips,
                         card = self
@@ -457,6 +468,22 @@ function Card:calculate_exotic(context, do_repeat)
                     end
                 end
             elseif context.after then
+            elseif context.drawn then
+                if context.drawn == G.hand then
+                    if name == "Meteor" then
+                        if context.facing_blind then
+                            for i = 1, config_thing.cards do
+                                local card = create_playing_card({
+                                    front = pseudorandom_element(G.P_CARDS, pseudoseed('met')), 
+                                    center = G.P_CENTERS.c_base}, G.hand, nil, nil, {G.C.SECONDARY_SET.Enhanced})
+                                card.ability.fleeting = true
+                                card:set_ability(G.P_CENTERS['m_stone'])
+                                G.GAME.blind:debuff_card(card)
+                                G.hand:sort()
+                            end
+                        end
+                    end
+                end
             elseif context.does_score then
                 if name == "Double Up" then
                     return true
@@ -464,6 +491,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return true
                 elseif name == "Blank Card" then
                     return "remove"
+                elseif name == "Meteor" then
+                    return true
                 end
                 return false
             elseif context.is_suit then
@@ -945,7 +974,7 @@ function Card:get_nominal(mod)
             s_nominal = has_suit.suit_nominal or 0
         end
         if (mod == 'suit') and (the_rank < 0) then
-            rank_mult = 1
+            rank_mult = 1.999
             r_nominal = 1
         end
         return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val + (self.ability.trading.order or 0)*0.00000001+ s_nominal*0.0001*mult
