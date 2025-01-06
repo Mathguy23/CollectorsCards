@@ -749,14 +749,17 @@ match_indent = true
 target = 'functions/common_events.lua'
 pattern = '''function copy_card(other, new_card, card_scale, playing_card, strip_edition)'''
 position = 'after'
-payload = '''   local old_fleeting = new_card and new_card.ability and new_card.ability.fleeting or other.ability and other.ability.fleeting or nil
+payload = '''   local old_fleeting = other.ability and other.ability.fleeting or nil
+    if new_card and new_card.ability then
+        old_fleeting = new_card.ability.fleeting
+    end
     local new_phantom = other.ability and other.ability.phantom or nil'''
 match_indent = true
 
 [[patches]]
 [patches.pattern]
 target = 'functions/common_events.lua'
-pattern = '''for k, v in pairs(other.ability) do'''
+pattern = '''new_card:set_sprites(new_card.config.center)'''
 position = 'before'
 payload = '''new_card.ability.fleeting = old_fleeting
 new_card.ability.phantom = new_phantom'''
