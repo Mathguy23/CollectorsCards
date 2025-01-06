@@ -10,3 +10,4 @@ Cards added by Suggestion:
  - :3, SMG9000
  - Executor, Twilight & Sunset
  - Monarch, Enderjed
+ - Meteor, TheGreenDigi
