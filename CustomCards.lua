@@ -173,7 +173,7 @@ function Card:calculate_exotic(context, do_repeat)
             if i ~= 1 then
                 if reps[i] then
                     if reps[i].cards then
-                        for j = ((context.individual) and (context.cardarea == G.play) and 2) or 1, #reps[i].cards do
+                        for j = ((context.individual) and (context.cardarea == G.play) and 1) or 1, #reps[i].cards do
                             local m = reps[i]
                             table.insert(effects, {extra = {func = function()
                                 card_eval_status_text(m.cards[j], 'jokers', nil, nil, nil, m)
@@ -472,6 +472,7 @@ function Card:calculate_exotic(context, do_repeat)
                 if context.drawn == G.hand then
                     if name == "Meteor" then
                         if context.facing_blind then
+                            self.ability.already_drawn = G.GAME.round
                             for i = 1, config_thing.cards do
                                 local card = create_playing_card({
                                     front = pseudorandom_element(G.P_CARDS, pseudoseed('met')), 
@@ -615,21 +616,20 @@ function Card:calculate_exotic(context, do_repeat)
                 --from Jokers
                 for l=1, #G.jokers.cards do
                     --calculate the joker effects
-                    local eval = eval_card(G.jokers.cards[l], {cardarea = self.area, other_card = self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, callback = function(card, ret) eval = {jokers = ret}
-                        if next(eval) then 
-                            local new_table = {eval.jokers.card}
-                            for g = 1, #do_repeat do
-                                table.insert(new_table, do_repeat[g])
-                            end
-                            for h = 1, eval.jokers.repetitions do
-                                reps[#reps+1] = {
-                                    cards = new_table,
-                                    message = eval.jokers.message,
-                                    repetitions = eval.jokers.repetitions,
-                                }
-                            end
-                        end 
-                    end})
+                    local eval = eval_card(G.jokers.cards[l], {cardarea = self.area, other_card = self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands})
+                    if next(eval) then 
+                        local new_table = {eval.jokers.card}
+                        for g = 1, #do_repeat do
+                            table.insert(new_table, do_repeat[g])
+                        end
+                        for h = 1, eval.jokers.repetitions do
+                            reps[#reps+1] = {
+                                cards = new_table,
+                                message = eval.jokers.message,
+                                repetitions = eval.jokers.repetitions,
+                            }
+                        end
+                    end
                 end
 
                 if context.scoring_hand then
@@ -981,6 +981,74 @@ function Card:get_nominal(mod)
     end
     return old_nominal(self, mod)
 end
+
+local old_repitions = SMODS.calculate_repetitions
+SMODS.calculate_repetitions = function(card, context, reps)
+    local reps = old_repitions(card, context, reps)
+    if context.scoring_hand then
+        for l=1, #context.scoring_hand do
+            local eval = context.scoring_hand[l]:calculate_exotic({cardarea = context.cardarea, other_card = card, repetition = true, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, end_of_round = context.end_of_round}, {})
+            if next(eval) then
+                for _, minieval in ipairs(eval) do
+                    if minieval.repetitions then
+                        for h = 1, minieval.repetitions do
+                            reps[#reps+1] = {jokers = {
+                                message = minieval.message,
+                                card = minieval.cards[#minieval.cards],
+                                repetitions = minieval.repetitions,
+                                cards = minieval.cards,
+                            }}
+                        end
+                    end
+                end
+            end
+        end
+    end
+    for l=1, #G.hand.cards do
+        local eval = G.hand.cards[l]:calculate_exotic({cardarea = context.cardarea, other_card = card, repetition = true, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, end_of_round = context.end_of_round}, {})
+        if next(eval) then
+            for _, minieval in ipairs(eval) do
+                if minieval.repetitions then
+                    for h = 1, minieval.repetitions do
+                        reps[#reps+1] = {jokers = {
+                            message = minieval.message,
+                            card = minieval.cards[#minieval.cards],
+                            repetitions = minieval.repetitions,
+                            cards = minieval.cards,
+                        }}
+                    end
+                end
+            end
+        end
+    end
+    return reps
+end
+
+local old_indiv = SMODS.calculate_individual_effect
+SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, amount, from_edition)
+    local result = old_indiv(effect, scored_card, percent, key, amount, from_edition)
+    if (key == 'pc_h_chips') and amount then 
+        hand_chips = mod_chips(hand_chips + amount)
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        if not effect.remove_default_message then
+            if from_edition then
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type = 'variable', key = amount > 0 and 'a_chips' or 'a_chips_minus', vars = {amount}}, chip_mod = amount, colour = G.C.EDITION, edition = true})
+            else
+                if key ~= 'chip_mod' then
+                    if effect.chip_message then
+                        card_eval_status_text(scored_card or effect.focus, 'extra', nil, percent, nil, effect.chip_message)
+                    else
+                        card_eval_status_text(scored_card or effect.focus, 'chips', amount, percent)
+                    end
+                end
+            end
+        end
+        return true
+    end
+    return result
+end
+
+table.insert(SMODS.calculation_keys, 'pc_h_chips')
 
 ----------------------------------------------
 ------------MOD CODE END----------------------
