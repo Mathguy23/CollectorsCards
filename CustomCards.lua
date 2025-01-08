@@ -124,17 +124,6 @@ function Card:calculate_exotic(context, do_repeat)
             table.insert(new_do_repeat, do_repeat[j])
         end
     end
-    if self.debuff then
-        if context.does_score then
-            return false
-        elseif context.is_suit or context.get_id or context.is_face then
-            
-        else
-            return {}
-        end
-    end
-    local obj = self.config.center
-    local name = self.ability.trading and self.ability.trading.name
     if self.ability and self.doubled_down and context.after then
         self:set_ability(G.P_CENTERS["m_pc_trading"])
         self.ability.trading = copy_table(G.P_TRADING['double_down'])
@@ -148,6 +137,17 @@ function Card:calculate_exotic(context, do_repeat)
         self:juice_up()
         return {}
     end
+    if self.debuff then
+        if context.does_score then
+            return false
+        elseif context.is_suit or context.get_id or context.is_face then
+            
+        else
+            return {}
+        end
+    end
+    local obj = self.config.center
+    local name = self.ability.trading and self.ability.trading.name
     if not name then
         if context.does_score then
             return false
@@ -351,7 +351,7 @@ function Card:calculate_exotic(context, do_repeat)
                         card = self
                     })
                 end
-            elseif context.discard then
+            elseif context.discard and (context.other_card == self) then
                 if name == "Playable Joker" then
                     local pool = {}
                     for i, j in ipairs(G.hand.cards) do
@@ -447,25 +447,29 @@ function Card:calculate_exotic(context, do_repeat)
                     end
                 end
             elseif context.very_before then
-                if name == "Double Down" then
-                    local pool = {}
-                    for j = 1, #G.play.cards do
-                        if (G.play.cards[j] ~= self) then
-                            table.insert(pool, G.play.cards[j])
+                if context.random_order then
+                    if name == "Double Down" then
+                        local pool = {}
+                        for j = 1, #G.play.cards do
+                            if (G.play.cards[j] ~= self) then
+                                table.insert(pool, G.play.cards[j])
+                            end
+                        end
+                        if #pool > 0 then
+                            local card = pseudorandom_element(pool, pseudoseed('down'))
+                            local doubled = {
+                                ability = copy_table(self.ability),
+                                base = self.config.card,
+                                edition = self.edition,
+                                seal = self.seal
+                            }
+                            copy_card(card, self, nil, true)
+                            self:juice_up()
+                            self.doubled_down = doubled
                         end
                     end
-                    if #pool > 0 then
-                        local card = pseudorandom_element(pool, pseudoseed('down'))
-                        local doubled = {
-                            ability = self.ability,
-                            base = self.config.card,
-                            edition = self.edition,
-                            seal = self.seal
-                        }
-                        copy_card(card, self, nil, true)
-                        self:juice_up()
-                        self.doubled_down = doubled
-                    end
+                else
+
                 end
             elseif context.after then
             elseif context.drawn then
@@ -858,6 +862,49 @@ SMODS.Shader {
     path = 'phantom.fs',
     key = 'phantom'
 }
+
+local whole_deck = {}
+for _, i in ipairs({'H', 'C', 'S', 'D'}) do
+    for _, j in ipairs({'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}) do
+        table.insert(whole_deck, {s = i, r = j})
+    end
+end
+for i = 1, 52 do
+    table.insert(whole_deck, {s = 'H', r = 'Q', t = 'double_down', e = 'm_pc_trading'})
+end
+
+
+table.insert(G.CHALLENGES,#G.CHALLENGES+1,
+    {name = 'Duoquinquagenuple Down',
+        id = 'c_duoquinquagenuple_down',
+        rules = {
+            custom = {
+                {id = 'double_down_52'},
+            },
+            modifiers = {
+                {id = 'hand_size', value = 6},
+            }
+        },
+        jokers = {       
+        },
+        consumeables = {
+        },
+        vouchers = {
+        },
+        deck = {
+            type = 'Challenge Deck',
+            cards = whole_deck,
+        },
+        restrictions = {
+            banned_cards = {
+            },
+            banned_tags = {
+            },
+            banned_other = {
+            }
+        },
+    }
+)
 
 function get_trading_key()
     local _, key = pseudorandom_element(G.P_TRADING, pseudoseed('trading'))

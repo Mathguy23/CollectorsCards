@@ -275,7 +275,7 @@ pattern = '''function eval_card(card, context)'''
 position = 'after'
 payload = '''   local special_eval = nil
     if context.discard and (context.full_hand == G.hand.highlighted) then
-        special_eval = card:calculate_exotic({discard = true, full_hand = G.hand.highlighted}, {})
+        special_eval = card:calculate_exotic({discard = true, full_hand = G.hand.highlighted, other_card = context.other_card}, {})
     end
     if special_eval and special_eval.remove then
         ret.remove = true
@@ -373,8 +373,15 @@ position = 'after'
 payload = '''G.E_MANAGER:add_event(Event({
     trigger = 'immediate',
         func = function()
+            local pool = {}
             for k=1, #G.play.cards do
+                table.insert(pool, G.play.cards[k])
                 G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, very_before = true})
+            end
+            while #pool > 0 do
+                local card, key = pseudorandom_element(pool, pseudoseed('order'))
+                table.remove(pool, key)
+                card:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, very_before = true, random_order = true})
             end
         return true
     end
@@ -607,4 +614,44 @@ pattern = '''new_card:set_sprites(new_card.config.center)'''
 position = 'before'
 payload = '''new_card.ability.fleeting = old_fleeting
 new_card.ability.phantom = new_phantom'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''if _de.gold_seal then _g = _de.gold_seal end'''
+position = 'after'
+payload = '''if _de.trade then _t = _de.trade end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''local keep, _e, _d, _g = true, nil, nil, nil'''
+position = 'after'
+payload = '''local _t = nil'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''if keep then card_protos[#card_protos+1] = {s=_s,r=_r,e=_e,d=_d,g=_g} end'''
+position = 'after'
+payload = '''if keep then card_protos[#card_protos].t = {t = _t} end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = '''if control.g then _card:set_seal(control.g, true, true) end'''
+position = 'after'
+payload = '''if control.t then _card.ability.trading = G.P_TRADING[control.t];_card:set_sprites(_card.config.center) end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''if v.g then _card:set_seal(v.g, true, true) end'''
+position = 'after'
+payload = '''if v.t then _card.ability.trading = G.P_TRADING[v.t];_card:set_sprites(_card.config.center)  end'''
 match_indent = true
