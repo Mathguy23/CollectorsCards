@@ -317,6 +317,12 @@ return {
         v_dictionary = {
             a_discards = "+#1# Discard",
             a_cards = "+#1# Cards",
+        },
+        challenge_names = {
+            c_duoquinquagenuple_down = "Duoquinquagenuple Down"
+        },
+        v_text = {
+            ch_c_double_down_52 = {"Start with {C:attention}52{} extra {C:attention}Double Downs{}"},
         }
     }
 }
