@@ -351,6 +351,14 @@ function Card:calculate_exotic(context, do_repeat)
                         card = self
                     })
                 end
+            elseif context.playing_card_hand then
+                if name == "Aluminum Plate" then
+                    print(config_thing.h_x_mult)
+                    table.insert(effects, {
+                        x_mult = config_thing.h_x_mult,
+                        card = self
+                    })
+                end
             elseif context.discard and (context.other_card == self) then
                 if name == "Playable Joker" then
                     local pool = {}

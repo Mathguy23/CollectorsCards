@@ -70,6 +70,8 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
         info_queue[#info_queue + 1] = G.P_CENTERS['m_stone']
         info_queue[#info_queue+1] = {key = 'fleeting', set = 'Other'}
         loc_vars = {config_thing.chips, config_thing.cards}
+    elseif specific_vars.collect.name == "Aluminum Plate" then
+        loc_vars = {config_thing.h_x_mult}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -107,6 +109,7 @@ payload = '''self.P_TRADING = {
     executor = {order = 19, key = 'executor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Executor", pos = {x=2,y=4}, set = "CustomCard", config = {chips = 3, destroys = 3, destroyed = 0}, base = "C_3"},
     monarch = {order = 20, key = 'monarch', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Monarch", pos = {x=3,y=4}, set = "CustomCard", config = {chips = 50}, base = "S_K"},
     meteor = {order = 21, key = 'meteor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Meteor", pos = {x=4,y=4}, set = "CustomCard", config = {chips = 50, cards = 2}, base = "D_A"},
+    aluminum_plate = {order = 22, key = 'aluminum_plate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Aluminum Plate", pos = {x=0,y=5}, set = "CustomCard", config = {h_x_mult = 1.8}, base = "S_8"},
  }'''
 match_indent = true
 

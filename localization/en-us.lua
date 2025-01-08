@@ -106,6 +106,11 @@ return {
                     "Meteor",
                 },
             },
+            aluminum_plate = {
+                text = {
+                    "Aluminum Plate",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -286,6 +291,13 @@ return {
                     "When {C:attention}drawn{} during a",
                     "{C:attention}blind{}, create {C:attention}#2#{} {C:purple}Fleeting{}",
                     "{C:attention}Stone Cards{}"
+                },
+            },
+            aluminum_plate = {
+                text = {
+                    "{X:mult,C:white} X#1# {} Mult",
+                    "while this card",
+                    "stays in hand"
                 },
             },
         },
