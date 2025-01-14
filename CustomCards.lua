@@ -72,6 +72,7 @@ function create_UIBox_Trading()
                 card.ability.trading = copy_table(trading)
                 card:set_sprites(card.config.center)
                 G.your_collection[j]:emplace(card)
+                card.playing_card = true
             end
         end
     end
@@ -112,6 +113,7 @@ G.FUNCS.your_collection_trading_page = function(args)
             card.ability.trading = copy_table(trading)
             card:set_sprites(card.config.center)
             G.your_collection[j]:emplace(card)
+            card.playing_card = true
         end
     end
     INIT_COLLECTION_CARD_ALERTS()
@@ -173,11 +175,18 @@ function Card:calculate_exotic(context, do_repeat)
             if i ~= 1 then
                 if reps[i] then
                     if reps[i].cards then
-                        for j = ((context.individual) and (context.cardarea == G.play) and 1) or 1, #reps[i].cards do
-                            local m = reps[i]
-                            table.insert(effects, {extra = {func = function()
+                        if context.using_consumeable then
+                            for j = ((context.individual) and (context.cardarea == G.play) and 1) or 1, #reps[i].cards do
+                                local m = reps[i]
                                 card_eval_status_text(m.cards[j], 'jokers', nil, nil, nil, m)
-                            end}})
+                            end
+                        else
+                            for j = ((context.individual) and (context.cardarea == G.play) and 1) or 1, #reps[i].cards do
+                                local m = reps[i]
+                                table.insert(effects, {extra = {func = function()
+                                    card_eval_status_text(m.cards[j], 'jokers', nil, nil, nil, m)
+                                end}})
+                            end
                         end
                     end
                 end
@@ -353,7 +362,6 @@ function Card:calculate_exotic(context, do_repeat)
                 end
             elseif context.playing_card_hand then
                 if name == "Aluminum Plate" then
-                    print(config_thing.h_x_mult)
                     table.insert(effects, {
                         x_mult = config_thing.h_x_mult,
                         card = self
@@ -497,6 +505,34 @@ function Card:calculate_exotic(context, do_repeat)
                         end
                     end
                 end
+            elseif context.using_consumeable then
+                if name == "Fortune Orb" then
+                    if context.using_consumeable.ability and context.using_consumeable.ability.set == 'Tarot' then
+                        card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
+                        local size = math.min(#G.deck.cards, config_thing.cards)
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'before',
+                            delay = 0.1,
+                            func = function()
+                                phantom_cards = true
+                                return true
+                            end
+                        }))
+                        for i = 1, config_thing.cards do
+                            draw_card(G.deck,G.hand, i*100/size,'up', true)
+                            delay(0.1)
+                        end
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'before',
+                            delay = 0.1,
+                            func = function()
+                                phantom_cards = nil
+                                return true
+                            end
+                        }))
+                        table.insert(effects, {})
+                    end
+                end
             elseif context.does_score then
                 if name == "Double Up" then
                     return true
@@ -577,6 +613,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 3
                 elseif name == "Monarch" then
                     return 13
+                elseif name == "Fortune Orb" then
+                    return 12
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -610,8 +648,8 @@ function Card:calculate_exotic(context, do_repeat)
                         return {}
                     end
                 end
-                local eval = eval_card(self, {cardarea = self.area, repetition = true, repetition_only = true, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands})
-                if next(eval) and (next(effects[1]) or #effects > 1) then 
+                local eval = eval_card(self, {cardarea = self.area, repetition = true, repetition_only = true, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = self}}})
+                if next(eval) then 
                     local new_table = {eval.seals.card}
                     for g = 1, #do_repeat do
                         table.insert(new_table, do_repeat[g])
@@ -628,8 +666,8 @@ function Card:calculate_exotic(context, do_repeat)
                 --from Jokers
                 for l=1, #G.jokers.cards do
                     --calculate the joker effects
-                    local eval = eval_card(G.jokers.cards[l], {cardarea = self.area, other_card = self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands})
-                    if next(eval) then 
+                    local eval = eval_card(G.jokers.cards[l], {cardarea = self.area, other_card = self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = self}}})
+                    if eval and next(eval) then 
                         local new_table = {eval.jokers.card}
                         for g = 1, #do_repeat do
                             table.insert(new_table, do_repeat[g])

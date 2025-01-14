@@ -111,6 +111,11 @@ return {
                     "Aluminum Plate",
                 },
             },
+            fortune_orb = {
+                text = {
+                    "Fortune Orb",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -298,6 +303,15 @@ return {
                     "{X:mult,C:white} X#1# {} Mult",
                     "while this card",
                     "stays in hand"
+                },
+            },
+            fortune_orb = {
+                text = {
+                    "{C:attention}Queen{}",
+                    "Draw {C:attention}#1#{} cards as ",
+                    "{C:attention}Phantom{} when a {C:tarot}Tarot{}",
+                    "card is used while this",
+                    "card stays in hand",
                 },
             },
         },

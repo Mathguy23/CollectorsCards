@@ -72,6 +72,9 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
         loc_vars = {config_thing.chips, config_thing.cards}
     elseif specific_vars.collect.name == "Aluminum Plate" then
         loc_vars = {config_thing.h_x_mult}
+    elseif specific_vars.collect.name == "Fortune Orb" then
+        info_queue[#info_queue+1] = {key = 'phantom', set = 'Other'}
+        loc_vars = {config_thing.cards}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -110,6 +113,7 @@ payload = '''self.P_TRADING = {
     monarch = {order = 20, key = 'monarch', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Monarch", pos = {x=3,y=4}, set = "CustomCard", config = {chips = 50}, base = "S_K"},
     meteor = {order = 21, key = 'meteor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Meteor", pos = {x=4,y=4}, set = "CustomCard", config = {chips = 50, cards = 2}, base = "D_A"},
     aluminum_plate = {order = 22, key = 'aluminum_plate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Aluminum Plate", pos = {x=0,y=5}, set = "CustomCard", config = {h_x_mult = 1.8}, base = "S_8"},
+    fortune_orb = {order = 23, key = 'fortune_orb', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Fortune Orb", pos = {x=1,y=5}, set = "CustomCard", config = {cards = 2}, base = "S_Q"},
  }'''
 match_indent = true
 
@@ -657,4 +661,14 @@ target = 'functions/UI_definitions.lua'
 pattern = '''if v.g then _card:set_seal(v.g, true, true) end'''
 position = 'after'
 payload = '''if v.t then _card.ability.trading = G.P_TRADING[v.t];_card:set_sprites(_card.config.center)  end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''e.config.ref_table:use_consumeable(area)'''
+position = 'after'
+payload = '''for i = 1, #G.hand.cards do
+    G.hand.cards[i]:calculate_exotic({using_consumeable = e.config.ref_table}, {})
+end'''
 match_indent = true
