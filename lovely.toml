@@ -75,6 +75,10 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
     elseif specific_vars.collect.name == "Fortune Orb" then
         info_queue[#info_queue+1] = {key = 'phantom', set = 'Other'}
         loc_vars = {config_thing.cards}
+    elseif specific_vars.collect.name == "Bust Card" then
+        loc_vars = {config_thing.mult, config_thing.cards}
+    elseif specific_vars.collect.name == "Old Bell" then
+        loc_vars = {localize("Clubs", 'suits_plural'), config_thing.chips, config_thing.x_mult}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -114,6 +118,8 @@ payload = '''self.P_TRADING = {
     meteor = {order = 21, key = 'meteor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Meteor", pos = {x=4,y=4}, set = "CustomCard", config = {chips = 50, cards = 2}, base = "D_A"},
     aluminum_plate = {order = 22, key = 'aluminum_plate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Aluminum Plate", pos = {x=0,y=5}, set = "CustomCard", config = {h_x_mult = 1.8}, base = "S_8"},
     fortune_orb = {order = 23, key = 'fortune_orb', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Fortune Orb", pos = {x=1,y=5}, set = "CustomCard", config = {cards = 2}, base = "S_Q"},
+    bust_card = {order = 24, key = 'bust_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Bust Card", pos = {x=2,y=5}, set = "CustomCard", config = {mult = 22, cards = 2}, base = "H_2"},
+    old_bell = {order = 25, key = 'old_bell', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Old Bell", pos = {x=3,y=5}, set = "CustomCard", config = {chips = 10, x_mult = 3}, base = "C_K"},
  }'''
 match_indent = true
 
@@ -670,5 +676,29 @@ pattern = '''e.config.ref_table:use_consumeable(area)'''
 position = 'after'
 payload = '''for i = 1, #G.hand.cards do
     G.hand.cards[i]:calculate_exotic({using_consumeable = e.config.ref_table}, {})
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''v.ability.discarded = nil'''
+position = 'after'
+payload = '''if v.debuff then
+    v.ability.temp_debuff = nil
+    v:set_debuff()
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''if v.ability.forced_selection and not self.highlighted[1] then'''
+position = 'before'
+payload = '''if v.ability.trading and (v.ability.trading.name == "Old Bell") and not v.highlighted and not v.debuff and not (v.ability.forced_selection and not self.highlighted[1]) then
+    self:add_to_highlighted(v)
+    if v.highlighted then
+        v.ability.forced_selection = true
+    end
 end'''
 match_indent = true

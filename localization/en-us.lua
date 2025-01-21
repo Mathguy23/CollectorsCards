@@ -116,6 +116,16 @@ return {
                     "Fortune Orb",
                 },
             },
+            bust_card = {
+                text = {
+                    "Bust Card",
+                },
+            },
+            old_bell = {
+                text = {
+                    "Old Bell",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -314,6 +324,21 @@ return {
                     "card stays in hand",
                 },
             },
+            bust_card = {
+                text = {
+                    "{C:attention}Always Scores{}",
+                    "{C:red}+#1#{} Mult. When {C:attention}drawn{}",
+                    "during a {C:attention}blind{}, {C:red}debuff{}",
+                    "{C:attention}#2#{} cards in hand"
+                },
+            },
+            old_bell = {
+                text = {
+                    "{C:attention}King{}, {C:clubs}#1#{}, {C:blue}+#2#{} Chips",
+                    "{X:mult,C:white} X#3# {} Mult. On {C:attention}Draw{},",
+                    "forced to be {C:attention}selected{}",
+                },
+            },
         },
         Tarot = {
             c_pc_exchange = {
@@ -338,7 +363,8 @@ return {
             k_trading_pack = "Trading Pack",
             b_up = "+",
             b_down = "-",
-            k_perfect_gold = "Golden!"
+            k_perfect_gold = "Golden!",
+            k_bust = "Bust!",
         },
         v_dictionary = {
             a_discards = "+#1# Discard",

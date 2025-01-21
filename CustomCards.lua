@@ -359,6 +359,11 @@ function Card:calculate_exotic(context, do_repeat)
                         chips = config_thing.chips,
                         card = self
                     })
+                elseif name == "Bust Card" then
+                    table.insert(effects, {
+                        mult = config_thing.mult,
+                        card = self
+                    })
                 end
             elseif context.playing_card_hand then
                 if name == "Aluminum Plate" then
@@ -503,6 +508,26 @@ function Card:calculate_exotic(context, do_repeat)
                                 G.hand:sort()
                             end
                         end
+                    elseif name == "Bust Card" then
+                        if context.facing_blind then
+                            self.ability.already_drawn = G.GAME.round
+                            local pool = {}
+                            for i, j in ipairs(G.hand.cards) do
+                                local card = G.hand.cards[i]
+                                if not card.edition and (card ~= self) then
+                                    table.insert(pool, card)
+                                end
+                            end
+                            card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_bust'), colour = G.C.RED})
+                            for i = 1, config_thing.cards do
+                                if #pool > 0 then
+                                    local card, index = pseudorandom_element(pool, pseudoseed('bust'))
+                                    table.remove(pool, index)
+                                    card.ability.temp_debuff = true
+                                    card:set_debuff()
+                                end
+                            end
+                        end
                     end
                 end
             elseif context.using_consumeable then
@@ -542,6 +567,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return "remove"
                 elseif name == "Meteor" then
                     return true
+                elseif name == "Bust Card" then
+                    return true
                 end
                 return false
             elseif context.is_suit then
@@ -565,6 +592,10 @@ function Card:calculate_exotic(context, do_repeat)
                     end
                 elseif name == "Monarch" then
                     if (context.is_suit == "Hearts") or (context.is_suit == "Clubs") or (context.is_suit == "Spades") or ((context.is_suit == "Diamonds") and next(find_joker('Smeared Joker'))) then
+                        return true
+                    end
+                elseif name == "Old Bell" then
+                    if ((context.is_suit == "Spades") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Clubs") then
                         return true
                     end
                 end
@@ -615,6 +646,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 13
                 elseif name == "Fortune Orb" then
                     return 12
+                elseif name == "Old Bell" then
+                    return 13
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -1073,6 +1106,12 @@ function Card:get_nominal(mod)
         return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val + (self.ability.trading.order or 0)*0.00000001+ s_nominal*0.0001*mult
     end
     return old_nominal(self, mod)
+end
+
+SMODS.current_mod.set_debuff = function(card)
+    if card.ability.temp_debuff then
+        return true
+    end
 end
 
 local old_repitions = SMODS.calculate_repetitions
