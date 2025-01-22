@@ -356,6 +356,15 @@ return {
                 text = {
                 }
             },
+        },
+        Tag = {
+            tag_pc_print = {
+                name = "Print Tag",
+                text = {
+                    "Gives a free",
+                    "{C:attention}Mega Trading Pack"
+                }
+            },
         }
     },
     misc = {

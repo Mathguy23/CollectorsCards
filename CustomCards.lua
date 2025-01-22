@@ -32,6 +32,8 @@ SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "decks.png", px
 
 SMODS.Atlas({ key = "booster", atlas_table = "ASSET_ATLAS", path = "boosters.png", px = 71, py = 95})
 
+SMODS.Atlas({ key = "tags", atlas_table = "ASSET_ATLAS", path = "tags.png", px = 34, py = 34})
+
 SMODS.current_mod.custom_collection_tabs = function()
 	return { UIBox_button {
         count = G.ACTIVE_MOD_UI and modsCollectionTally(G.P_CENTER_POOLS["Exotic"]),
@@ -362,6 +364,12 @@ function Card:calculate_exotic(context, do_repeat)
                 elseif name == "Bust Card" then
                     table.insert(effects, {
                         mult = config_thing.mult,
+                        card = self
+                    })
+                elseif name == "Old Bell" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        x_mult = config_thing.x_mult,
                         card = self
                     })
                 end
@@ -790,26 +798,56 @@ SMODS.Tarot {
     end
 }
 
+SMODS.Tag {
+    key = 'print',
+    atlas = 'tags',
+    pos = {x = 0, y = 0},
+    apply = function(self, tag, context)
+        if context.type == 'new_blind_choice' then
+            local lock = tag.ID
+            G.CONTROLLER.locks[lock] = true
+            tag:yep('+', G.C.RED,function() 
+                local key = 'p_pc_trading_mega_1'
+                local card = Card(G.play.T.x + G.play.T.w/2 - G.CARD_W*1.27/2,
+                G.play.T.y + G.play.T.h/2-G.CARD_H*1.27/2, G.CARD_W*1.27, G.CARD_H*1.27, G.P_CARDS.empty, G.P_CENTERS[key], {bypass_discovery_center = true, bypass_discovery_ui = true})
+                card.cost = 0
+                card.from_tag = true
+                G.FUNCS.use_card({config = {ref_table = card}})
+                card:start_materialize()
+                G.CONTROLLER.locks[lock] = nil
+                return true
+            end)
+            tag.triggered = true
+            return true
+        end
+    end,
+    loc_vars = function(self, info_queue, tag)
+        info_queue[#info_queue+1] = G.P_CENTERS['p_pc_trading_mega_1']
+        return {}
+    end,
+    config = {type = 'new_blind_choice'}
+}
+
 SMODS.Back {
     key = 'Collected',
     loc_txt = {
         name = "Collected Deck",
         text = {
-            "Start with {C:attention}2{}",
+            "Start with {C:attention}5{}",
             "{C:attention}Trading Cards{}"
         }
     },
     atlas = "decks",
-    pos = {x = 2, y = 0},
+    pos = {x = 0, y = 0},
     name = "Stuff Deck",
     apply = function(self)
         G.E_MANAGER:add_event(Event({
             func = function()
-                for i = 1, 2 do
+                for i = 1, 5 do
                     local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
                     card:remove()
                 end
-                for i = 1, 2 do
+                for i = 1, 5 do
                     local key = G.P_TRADING[get_trading_key()]
                     local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
                     _card.ability.trading = copy_table(key)
