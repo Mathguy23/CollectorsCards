@@ -194,7 +194,12 @@ function Card:calculate_exotic(context, do_repeat)
                 end
             end
             local config_thing = self.ability.trading.config 
-            if context.individual and (context.cardarea == G.play) then
+            if self.ability.trading.key and pc_cross_mod_cards[self.ability.trading.key] and pc_cross_mod_cards[self.ability.trading.key].calculate then
+                local result = pc_cross_mod_cards[self.ability.trading.key].calculate(self, effects, context, reps)
+                if context.does_score or context.is_suit or context.get_id or context.is_face then
+                    return result
+                end
+            elseif context.individual and (context.cardarea == G.play) then
                 if self.area == G.play then
                     if name == "Golden Ratio" then
                         local first_fib = nil

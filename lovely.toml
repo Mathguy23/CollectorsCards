@@ -21,7 +21,9 @@ pattern = '''localize{type = 'other', key = _c.key, nodes = desc_nodes, vars = s
 position = 'after'
 payload = '''elseif specific_vars and not specific_vars.debuffed and type(specific_vars.collect) == "table" then
     local config_thing = specific_vars.collect.config
-    if specific_vars.collect.name == "Flint Card" then
+    if card and card.ability.trading.key and pc_cross_mod_cards[card.ability.trading.key] and pc_cross_mod_cards[card.ability.trading.key].loc_vars then
+        loc_vars = pc_cross_mod_cards[card.ability.trading.key].loc_vars(specific_vars, info_queue, card)
+    elseif specific_vars.collect.name == "Flint Card" then
         loc_vars = {localize("Hearts", 'suits_plural'), localize("Diamonds", 'suits_plural'), config_thing.mult}
     elseif specific_vars.collect.name == "Eye Card" then
         loc_vars = {localize("Spades", 'suits_plural'), localize("Clubs", 'suits_plural'), config_thing.chips}
@@ -699,6 +701,29 @@ payload = '''if v.ability.trading and (v.ability.trading.name == "Old Bell") and
     self:add_to_highlighted(v)
     if v.highlighted then
         v.ability.forced_selection = true
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''function Game:init_item_prototypes()'''
+position = 'before'
+payload = '''function pc_add_cross_mod_card(args)
+    pc_cross_mod_cards = pc_cross_mod_cards or {}
+    G.P_TRADING[args.key] = args.card
+    table.insert(G.P_CENTER_POOLS["Exotic"], G.P_TRADING[args.key])
+    local order = #G.P_CENTER_POOLS["Exotic"]
+    G.P_TRADING[args.key].order = order + 1
+    G.P_TRADING[args.key].set = "CustomCard"
+    pc_cross_mod_cards[args.key] = {center = G.P_TRADING[args.key]}
+    table.sort(G.P_CENTER_POOLS["Exotic"], function (a, b) return a.order < b.order end)
+    if args.calculate then
+        pc_cross_mod_cards[args.key].calculate = args.calculate
+    end
+    if args.loc_vars then
+        pc_cross_mod_cards[args.key].loc_vars = args.loc_vars
     end
 end'''
 match_indent = true
