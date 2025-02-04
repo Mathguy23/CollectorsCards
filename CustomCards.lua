@@ -8,6 +8,8 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
+pc_cross_mod_cards = pc_cross_mod_cards or {}
+
 SMODS.Enhancement {
     key = 'trading',
     name = "Speical Card",
