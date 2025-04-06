@@ -1031,7 +1031,13 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
 )
 
 function get_trading_key()
-    local _, key = pseudorandom_element(G.P_TRADING, pseudoseed('trading'))
+    rng_table = {}
+    for i, j in pairs(G.P_TRADING) do
+        if (not j.in_pool or j:in_pool()) and (not pc_cross_mod_cards[i] or not pc_cross_mod_cards[i].in_pool or pc_cross_mod_cards[i].in_pool()) then
+            rng_table[i] = j
+        end
+    end
+    local _, key = pseudorandom_element(rng_table, pseudoseed('trading'))
     return key
 end
 
@@ -1151,6 +1157,76 @@ function Card:get_nominal(mod)
         return 10*r_nominal*rank_mult + s_nominal*mult + 10*f_nominal*rank_mult + 0.000001*self.unique_val + (self.ability.trading.order or 0)*0.00000001+ s_nominal*0.0001*mult
     end
     return old_nominal(self, mod)
+end
+
+local old_set_sprites = Card.set_sprites
+function Card:set_sprites(_center, _front)
+    old_set_sprites(self, _center, _front)
+    if _center and self.ability and self.ability.trading and self.ability.trading.atlas then 
+        if _center.set then
+            if self.children.center then
+                self.children.center.atlas = G.ASSET_ATLAS[(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
+                self.children.center:set_sprite_pos(_center.pos)
+                if self.ability and self.ability.trading and self.ability.trading.atlas then
+                    self.children.center.atlas = G.ASSET_ATLAS[self.ability.trading.atlas]
+                    self.children.center:set_sprite_pos(self.ability.trading.pos)
+                end
+            else
+                if _center.set == 'Joker' and not _center.unlocked and not self.params.bypass_discovery_center then 
+                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["Joker"], G.j_locked.pos)
+                elseif self.config.center.set == 'Voucher' and not self.config.center.unlocked and not self.params.bypass_discovery_center then 
+                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["Voucher"], G.v_locked.pos)
+                elseif self.ability and self.ability.trading and self.ability.trading.atlas then
+                        self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[self.ability.trading.atlas], self.ability.trading.pos)
+                elseif self.config.center.consumeable and self.config.center.demo then 
+                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["Tarot"], G.c_locked.pos)
+                elseif not self.params.bypass_discovery_center and (_center.set == 'Edition' or _center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher' or _center.set == 'Booster') and not _center.discovered then 
+                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[_center.atlas or _center.set], 
+                    (_center.set == 'Joker' and G.j_undiscovered.pos) or 
+                    (_center.set == 'Edition' and G.j_undiscovered.pos) or 
+                    (_center.set == 'Tarot' and G.t_undiscovered.pos) or 
+                    (_center.set == 'Planet' and G.p_undiscovered.pos) or 
+                    (_center.set == 'Spectral' and G.s_undiscovered.pos) or 
+                    (_center.set == 'Voucher' and G.v_undiscovered.pos) or 
+                    (_center.set == 'Booster' and G.booster_undiscovered.pos))
+                elseif _center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher' then
+                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[_center.set], self.config.center.pos)
+                else
+                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[_center.atlas or 'centers'], _center.pos)
+                end
+                self.children.center.states.hover = self.states.hover
+                self.children.center.states.click = self.states.click
+                self.children.center.states.drag = self.states.drag
+                self.children.center.states.collide.can = false
+                self.children.center:set_role({major = self, role_type = 'Glued', draw_major = self})
+            end
+            if _center.name == 'Half Joker' and (_center.discovered or self.bypass_discovery_center) then 
+                self.children.center.scale.y = self.children.center.scale.y/1.7
+            end
+            if _center.name == 'Photograph' and (_center.discovered or self.bypass_discovery_center) then 
+                self.children.center.scale.y = self.children.center.scale.y/1.2
+            end
+            if _center.name == 'Square Joker' and (_center.discovered or self.bypass_discovery_center) then 
+                self.children.center.scale.y = self.children.center.scale.x
+            end
+        end
+
+        if _center.soul_pos then 
+            self.children.floating_sprite = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['Joker'], self.config.center.soul_pos)
+            self.children.floating_sprite.role.draw_major = self
+            self.children.floating_sprite.states.hover.can = false
+            self.children.floating_sprite.states.click.can = false
+        end
+
+        if not self.children.back then
+            self.children.back = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["centers"], self.params.bypass_back or (self.playing_card and G.GAME[self.back].pos or G.P_CENTERS['b_red'].pos))
+            self.children.back.states.hover = self.states.hover
+            self.children.back.states.click = self.states.click
+            self.children.back.states.drag = self.states.drag
+            self.children.back.states.collide.can = false
+            self.children.back:set_role({major = self, role_type = 'Glued', draw_major = self})
+        end
+    end
 end
 
 SMODS.current_mod.set_debuff = function(card)

@@ -127,27 +127,6 @@ match_indent = true
 
 [[patches]]
 [patches.pattern]
-target = 'card.lua'
-pattern = '''self.children.center:set_sprite_pos(_center.pos)'''
-position = 'after'
-payload = '''if self.ability and self.ability.trading and self.ability.trading.atlas then
-    self.children.center.atlas = G.ASSET_ATLAS[self.ability.trading.atlas]
-    self.children.center:set_sprite_pos(self.ability.trading.pos)
-end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'card.lua'
-pattern = '''elseif self.config.center.consumeable and self.config.center.demo then'''
-position = 'before'
-payload = '''elseif self.ability and self.ability.trading and self.ability.trading.atlas then
-    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[self.ability.trading.atlas], self.ability.trading.pos)
-'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
 target = 'functions/common_events.lua'
 pattern = '''if not strip_edition then'''
 position = 'before'
@@ -724,6 +703,9 @@ payload = '''function pc_add_cross_mod_card(args)
     end
     if args.loc_vars then
         pc_cross_mod_cards[args.key].loc_vars = args.loc_vars
+    end
+    if args.in_pool then
+        pc_cross_mod_cards[args.key].in_pool = args.in_pool
     end
 end'''
 match_indent = true
