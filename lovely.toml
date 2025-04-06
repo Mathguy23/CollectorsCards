@@ -135,39 +135,6 @@ match_indent = true
 
 [[patches]]
 [patches.pattern]
-target = 'functions/state_events.lua'
-pattern = '''for i=1, #pures do'''
-position = 'before'
-payload = '''for k=1, #G.play.cards do
-    local eval = G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_name = text, poker_hands = poker_hands, does_score = true})
-    if eval then
-        if eval == "remove" then
-            local inside = false
-            for j=1, #scoring_hand do
-                if scoring_hand[j] == G.play.cards[k] then
-                    inside = j
-                end
-            end
-            if inside then
-                table.remove(scoring_hand, inside)
-            end
-        else
-            local inside = false
-            for j=1, #scoring_hand do
-                if scoring_hand[j] == G.play.cards[k] then
-                    inside = true
-                end
-            end
-            if not inside then
-                table.insert(scoring_hand, G.play.cards[k])
-            end
-        end
-    end
-end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
 target = 'card.lua'
 pattern = '''function Card:is_suit(suit, bypass_debuff, flush_calc)'''
 position = 'after'

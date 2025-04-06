@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.1
+--- VERSION: 1.0.2
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -1299,6 +1299,38 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
         return true
     end
     return result
+end
+
+local old_always_scores = SMODS.always_scores
+function SMODS.always_scores(card)
+    local eval = card:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, does_score = true})
+    if eval then
+        if eval == true then
+            return true
+        elseif eval == 'remove' then
+            return false
+        else
+            return old_always_scores(card)
+        end
+    else
+        return old_always_scores(card)
+    end
+end
+
+local old_never_scores = SMODS.never_scores
+function SMODS.never_scores(card)
+    local eval = card:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, does_score = true})
+    if eval then
+        if eval == true then
+            return old_never_scores(card)
+        elseif eval == 'remove' then
+            return true
+        else
+            return old_never_scores(card)
+        end
+    else
+        return old_never_scores(card)
+    end
 end
 
 table.insert(SMODS.calculation_keys, 'pc_h_chips')
