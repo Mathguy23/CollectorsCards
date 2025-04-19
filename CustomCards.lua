@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.2
+--- VERSION: 1.0.3
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -1334,6 +1334,17 @@ function SMODS.never_scores(card)
 end
 
 table.insert(SMODS.calculation_keys, 'pc_h_chips')
+
+local old_greyed = SMODS.DrawSteps['greyed'].func
+SMODS.DrawSteps['greyed'].func = function(self)
+    old_greyed(self)
+    if self.ability and self.ability.phantom then
+        self.children.center:draw_shader('pc_phantom', nil, self.ARGS.send_to_shader)
+        if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then
+            self.children.front:draw_shader('pc_phantom', nil, self.ARGS.send_to_shader)
+        end
+    end
+end
 
 ----------------------------------------------
 ------------MOD CODE END----------------------

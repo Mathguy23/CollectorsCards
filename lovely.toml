@@ -476,19 +476,6 @@ match_indent = true
 
 [[patches]]
 [patches.pattern]
-target = 'card.lua'
-pattern = '''elseif self.sprite_facing == 'back' then'''
-position = 'before'
-payload = '''if self.ability and self.ability.phantom then
-    self.children.center:draw_shader('pc_phantom', nil, self.ARGS.send_to_shader)
-    if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then
-        self.children.front:draw_shader('pc_phantom', nil, self.ARGS.send_to_shader)
-    end
-end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
 target = 'functions/common_events.lua'
 pattern = '''--Fill all remaining info if this is the main desc'''
 position = 'before'
@@ -512,6 +499,17 @@ match_indent = true
 [patches.pattern]
 target = 'blind.lua'
 pattern = '''function Blind:stay_flipped(area, card)'''
+position = 'after'
+payload = '''   
+    if phantom_cards and (area == G.hand) then
+        card.ability.phantom = true
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''function Blind:stay_flipped(area, card, from_area)'''
 position = 'after'
 payload = '''   
     if phantom_cards and (area == G.hand) then
