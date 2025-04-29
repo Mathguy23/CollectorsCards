@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.3
+--- VERSION: 1.0.4
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -15,8 +15,6 @@ SMODS.Enhancement {
     name = "Speical Card",
     config = {},
     replace_base_card = true,
-    no_suit = true,
-    no_rank = true,
     pos = {x = 0, y = 0},
     in_pool = function(self)
         return false
@@ -198,7 +196,7 @@ function Card:calculate_exotic(context, do_repeat)
             local config_thing = self.ability.trading.config 
             if self.ability.trading.key and pc_cross_mod_cards[self.ability.trading.key] and pc_cross_mod_cards[self.ability.trading.key].calculate then
                 local result = pc_cross_mod_cards[self.ability.trading.key].calculate(self, effects, context, reps)
-                if context.does_score or context.is_suit or context.get_id or context.is_face then
+                if result ~= nil then
                     return result
                 end
             elseif context.individual and (context.cardarea == G.play) then
