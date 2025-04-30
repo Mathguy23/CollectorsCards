@@ -217,6 +217,7 @@ function Card:calculate_exotic(context, do_repeat)
                                 card = context.other_card
                             })
                         end
+                        print(effects)
                     end
                 elseif self.area == G.hand then
 
@@ -1342,6 +1343,33 @@ SMODS.DrawSteps['greyed'].func = function(self)
             self.children.front:draw_shader('pc_phantom', nil, self.ARGS.send_to_shader)
         end
     end
+end
+
+SMODS.trigger_effects = function(effects, card)
+    local ret = {}
+    for _, effect_table in ipairs(effects) do
+        -- note: these sections happen to be mutually exclusive:
+        -- Playing cards in scoring
+        for _, key in ipairs({'playing_card', 'enhancement', 'edition', 'seals'}) do
+            SMODS.calculate_effect_table_key(effect_table, key, card, ret)
+        end
+        for _, key in ipairs(SMODS.Sticker.obj_buffer) do
+            SMODS.calculate_effect_table_key(effect_table, key, card, ret)
+        end
+        -- Playing cards at end of round
+        SMODS.calculate_effect_table_key(effect_table, 'end_of_round', card, ret)
+        -- Jokers
+        for _, key in ipairs({'jokers', 'retriggers'}) do
+            SMODS.calculate_effect_table_key(effect_table, key, card, ret)
+        end
+        -- todo: might want to move these keys to a customizable list/lists
+        if effect_table.trading_cards then
+            for i = 1, #effect_table.trading_cards do
+                SMODS.calculate_effect_table_key(effect_table.trading_cards, i, card, ret)
+            end
+        end
+    end
+    return ret
 end
 
 ----------------------------------------------

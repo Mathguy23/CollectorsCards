@@ -386,12 +386,13 @@ payload = '''if context.main_scoring and not context.no_trading then
         new_context[i] = j
     end
     local effects = {eval_card(card, new_context)}
+    local new_table = {}
     if context.scoring_hand then
         for k=1, #context.scoring_hand do
             local eval = context.scoring_hand[k]:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, other_card = card, individual = true, pc_end_round = context.end_of_round}, {})
             if eval then 
                 for l = 1, #eval do
-                    table.insert(effects, {eval[l]})
+                    table.insert(new_table, eval[l])
                 end
             end
         end
@@ -400,16 +401,17 @@ payload = '''if context.main_scoring and not context.no_trading then
         local eval = G.hand.cards[k]:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, other_card = card, individual = true, pc_end_round = context.end_of_round}, {})
         if eval then 
             for l = 1, #eval do
-                table.insert(effects, {eval[l]})
+                table.insert(new_table, eval[l])
             end
         end
     end
     local exotic_eval = card:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, playing_card_hand = (context.cardarea == G.hand), playing_card_main = (context.cardarea == G.play), pc_end_round = context.end_of_round})
     if exotic_eval then
         for l = 1, #exotic_eval do
-            table.insert(effects, {exotic_eval[l]})
+            table.insert(new_table, exotic_eval[l])
         end
     end
+    effects[1]['trading_cards'] = new_table
     return unpack(effects)
 end'''
 match_indent = true
