@@ -217,7 +217,6 @@ function Card:calculate_exotic(context, do_repeat)
                                 card = context.other_card
                             })
                         end
-                        print(effects)
                     end
                 elseif self.area == G.hand then
 
