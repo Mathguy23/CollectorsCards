@@ -81,6 +81,8 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
         loc_vars = {config_thing.mult, config_thing.cards}
     elseif specific_vars.collect.name == "Old Bell" then
         loc_vars = {localize("Clubs", 'suits_plural'), config_thing.chips, config_thing.x_mult}
+    elseif specific_vars.collect.name == "Miscut" then
+        loc_vars = {localize("Diamonds", 'suits_plural'), localize("Spades", 'suits_plural'), config_thing.chips}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -118,10 +120,12 @@ payload = '''self.P_TRADING = {
     executor = {order = 19, key = 'executor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Executor", pos = {x=2,y=4}, set = "CustomCard", config = {chips = 3, destroys = 3, destroyed = 0}, base = "C_3"},
     monarch = {order = 20, key = 'monarch', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Monarch", pos = {x=3,y=4}, set = "CustomCard", config = {chips = 50}, base = "S_K"},
     meteor = {order = 21, key = 'meteor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Meteor", pos = {x=4,y=4}, set = "CustomCard", config = {chips = 50, cards = 2}, base = "D_A"},
-    aluminum_plate = {order = 22, key = 'aluminum_plate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Aluminum Plate", pos = {x=0,y=5}, set = "CustomCard", config = {h_x_mult = 1.8}, base = "S_8"},
+    aluminum_plate = {order = 22, key = 'aluminum_plate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Aluminum Plate", pos = {x=0,y=5}, set = "CustomCard", config = {h_x_mult = 2}, base = "S_8"},
     fortune_orb = {order = 23, key = 'fortune_orb', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Fortune Orb", pos = {x=1,y=5}, set = "CustomCard", config = {cards = 2}, base = "S_Q"},
     bust_card = {order = 24, key = 'bust_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Bust Card", pos = {x=2,y=5}, set = "CustomCard", config = {mult = 22, cards = 2}, base = "H_2"},
     old_bell = {order = 25, key = 'old_bell', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Old Bell", pos = {x=3,y=5}, set = "CustomCard", config = {chips = 10, x_mult = 3}, base = "C_K"},
+    miscut = {order = 26, key = 'miscut', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Miscut", pos = {x=4,y=5}, set = "CustomCard", config = {chips = 11}, base = "S_A"},
+    free_pass = {order = 27, key = 'free_pass', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Free Pass", pos = {x=0,y=6}, set = "CustomCard", config = {}, base = "H_5"},
  }'''
 match_indent = true
 
@@ -140,7 +144,7 @@ pattern = '''function Card:is_suit(suit, bypass_debuff, flush_calc)'''
 position = 'after'
 payload = '''   if self.ability and self.ability.trading then
         local eval = self:calculate_exotic({bypass_debuff = bypass_debuff, flush_calc = flush_calc, is_suit = suit})
-        if eval then
+        if (eval ~= nil) then
             return eval
         end
     end'''
@@ -169,22 +173,6 @@ payload = '''   if (self.ability.name == 'Strength') or self.ability.consumeable
             if G.hand.highlighted[i].ability and G.hand.highlighted[i].ability.trading then return false end
         end
     end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'functions/state_events.lua'
-pattern = '''--calculate the hand effects'''
-position = 'before'
-payload = '''if (reps[j] ~= 1) then
-    local _, eff = next(reps[j])
-    if eff.cards then
-        for k = #eff.cards - 1, 1, -1 do
-            card_eval_status_text(eff.cards[k], 'jokers', nil, nil, nil, eff)
-        end
-    end
-end
-'''
 match_indent = true
 
 [[patches]]
@@ -675,4 +663,18 @@ payload = '''function pc_add_cross_mod_card(args)
         pc_cross_mod_cards[args.key].in_pool = args.in_pool
     end
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''ease_hands_played(-1)'''
+position = 'at'
+payload = '''for k=1, #G.hand.highlighted do
+    G.hand.highlighted[k]:calculate_exotic({cardarea = G.hand, full_hand = G.hand.highlighted, very_very_before = true})
+end
+if not hand_is_free then
+    ease_hands_played(-1)
+end
+hand_is_free = nil'''
 match_indent = true

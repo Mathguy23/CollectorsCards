@@ -126,6 +126,16 @@ return {
                     "Old Bell",
                 },
             },
+            miscut = {
+                text = {
+                    "Miscut",
+                },
+            },
+            free_pass = {
+                text = {
+                    "Free Pass",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -317,8 +327,8 @@ return {
             },
             fortune_orb = {
                 text = {
-                    "{C:attention}Queen{}",
-                    "Draw {C:attention}#1#{} cards as ",
+                    "{C:attention}Queen{}, {C:attention}Face Card{}",
+                    "Draw {C:attention}#1#{} cards as",
                     "{C:attention}Phantom{} when a {C:tarot}Tarot{}",
                     "card is used while this",
                     "card stays in hand",
@@ -334,11 +344,25 @@ return {
             },
             old_bell = {
                 text = {
-                    "{C:attention}King{}, {C:clubs}#1#{}, {C:blue}+#2#{} Chips",
+                    "{C:attention}King{}, {C:clubs}#1#{}, {C:attention}Face Card{}, {C:blue}+#2#{} Chips",
                     "{X:mult,C:white} X#3# {} Mult. On {C:attention}Draw{},",
                     "forced to be {C:attention}selected{}",
                 },
             },
+            miscut = {
+                text = {
+                    "{C:attention}Ace{}, {C:diamonds}#1#{}, {C:spades}#2#{}, {C:blue}+#3#{} Chips",
+                    "{C:attention}Increase{} or {C:attention}Decrease{} the {C:attention}rank{}",
+                    "of each card in {C:attention}hand{}"
+                }
+            },
+            free_pass = {
+                text = {
+                    "{C:attention}Always scores{}",
+                    "If {C:attention}played{}, this hand",
+                    "costs no {C:blue}Hands{}"
+                }
+            }
         },
         Tarot = {
             c_pc_exchange = {

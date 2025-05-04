@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.5
+--- VERSION: 1.0.6
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -25,6 +25,8 @@ SMODS.Enhancement {
 }
 
 SMODS.Atlas({ key = "trading", atlas_table = "ASSET_ATLAS", path = "cards.png", px = 71, py = 95})
+
+SMODS.Atlas({ key = "trading_hc", atlas_table = "ASSET_ATLAS", path = "cards_hc.png", px = 71, py = 95})
 
 SMODS.Atlas({ key = "tarots", atlas_table = "ASSET_ATLAS", path = "tarots.png", px = 71, py = 95})
 
@@ -181,13 +183,6 @@ function Card:calculate_exotic(context, do_repeat)
                             for j = ((context.individual) and (context.cardarea == G.play) and 1) or 1, #reps[i].cards do
                                 local m = reps[i]
                                 card_eval_status_text(m.cards[j], 'jokers', nil, nil, nil, m)
-                            end
-                        else
-                            for j = ((context.individual) and (context.cardarea == G.play) and 1) or 1, #reps[i].cards do
-                                local m = reps[i]
-                                table.insert(effects, {extra = {func = function()
-                                    card_eval_status_text(m.cards[j], 'jokers', nil, nil, nil, m)
-                                end}})
                             end
                         end
                     end
@@ -377,6 +372,49 @@ function Card:calculate_exotic(context, do_repeat)
                         x_mult = config_thing.x_mult,
                         card = self
                     })
+                elseif name == "Miscut" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
+                    table.insert(effects, {extra = {func = function()
+                        for j = 1, #G.hand.cards do
+                            local percent = 1.15 - (j-0.999)/(#G.hand.cards-0.998)*0.3
+                            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15, func = function()
+                                G.hand.cards[j]:flip()
+                                play_sound('card1', percent)
+                                G.hand.cards[j]:juice_up(0.3, 0.3)
+                                return true
+                            end
+                            }))
+                        end
+                    end}})
+                    table.insert(effects, {extra = {func = function()
+                        for j = 1, #G.hand.cards do
+                            local coinflip = pseudorandom('misc')
+                            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15, func = function()
+                                if coinflip < 0.5 then
+                                    SMODS.modify_rank(G.hand.cards[j], -1)
+                                else
+                                    SMODS.modify_rank(G.hand.cards[j], 1)
+                                end
+                                return true
+                            end
+                            }))
+                        end
+                    end}})
+                    table.insert(effects, {extra = {func = function()
+                        for j = 1, #G.hand.cards do
+                            local percent = 1.15 - (j-0.999)/(#G.hand.cards-0.998)*0.3
+                            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15, func = function()
+                                G.hand.cards[j]:flip()
+                                play_sound('card1', percent, 0.6)
+                                G.hand.cards[j]:juice_up(0.3, 0.3)
+                                return true
+                            end
+                            }))
+                        end
+                    end}})
                 end
             elseif context.playing_card_hand then
                 if name == "Aluminum Plate" then
@@ -453,8 +491,15 @@ function Card:calculate_exotic(context, do_repeat)
                         return true end }))
                     end
                 elseif name == "Executor" then
-                    if #G.hand.cards > 0 then
-                        local card = pseudorandom_element(G.hand.cards, pseudoseed('exec'))
+                    local pool = {}
+                    for j = 1, #G.hand.cards do
+                        if not G.hand.cards[j].getting_sliced then
+                            table.insert(pool, G.hand.cards[j])
+                        end
+                    end
+                    if #pool > 0 then
+                        local card = pseudorandom_element(pool, pseudoseed('exec'))
+                        card.getting_sliced = true
                         if card.ability and (card.ability.name == 'Glass Card') then 
                             card:shatter()
                         else
@@ -502,8 +547,10 @@ function Card:calculate_exotic(context, do_repeat)
                             self.doubled_down = doubled
                         end
                     end
-                else
-
+                end
+            elseif context.very_very_before then
+                if name == "Free Pass" then
+                    hand_is_free = true
                 end
             elseif context.after then
             elseif context.drawn then
@@ -582,6 +629,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return true
                 elseif name == "Bust Card" then
                     return true
+                elseif name == "Free Pass" then
+                    return true
                 end
                 return false
             elseif context.is_suit then
@@ -611,6 +660,10 @@ function Card:calculate_exotic(context, do_repeat)
                     if ((context.is_suit == "Spades") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Clubs") then
                         return true
                     end
+                elseif name == "Miscut" then
+                    if ((context.is_suit == "Hearts") and next(find_joker('Smeared Joker'))) or ((context.is_suit == "Clubs") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Spades") or (context.is_suit == "Diamonds") then
+                        return true
+                    end
                 end
                 return false
             elseif context.is_face then
@@ -622,11 +675,15 @@ function Card:calculate_exotic(context, do_repeat)
                     return true
                 elseif name == "Playable Joker" then
                     return true
+                elseif name == "Fortune Orb" then
+                    return true
                 elseif name == ":3" then
                     return true
                 elseif name == "Executor" then
                     return true
                 elseif name == "Monarch" then
+                    return true
+                elseif name == "Old Bell" then
                     return true
                 end
                 return false
@@ -661,6 +718,8 @@ function Card:calculate_exotic(context, do_repeat)
                     return 12
                 elseif name == "Old Bell" then
                     return 13
+                elseif name == "Miscut" then
+                    return 14
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -1163,49 +1222,15 @@ function Card:set_sprites(_center, _front)
     if _center and self.ability and self.ability.trading and self.ability.trading.atlas then 
         if _center.set then
             if self.children.center then
-                self.children.center.atlas = G.ASSET_ATLAS[(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
-                self.children.center:set_sprite_pos(_center.pos)
-                if self.ability and self.ability.trading and self.ability.trading.atlas then
-                    self.children.center.atlas = G.ASSET_ATLAS[self.ability.trading.atlas]
-                    self.children.center:set_sprite_pos(self.ability.trading.pos)
-                end
+                self.children.center.atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading']
+                self.children.center:set_sprite_pos(self.ability.trading.pos)
             else
-                if _center.set == 'Joker' and not _center.unlocked and not self.params.bypass_discovery_center then 
-                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["Joker"], G.j_locked.pos)
-                elseif self.config.center.set == 'Voucher' and not self.config.center.unlocked and not self.params.bypass_discovery_center then 
-                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["Voucher"], G.v_locked.pos)
-                elseif self.ability and self.ability.trading and self.ability.trading.atlas then
-                        self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[self.ability.trading.atlas], self.ability.trading.pos)
-                elseif self.config.center.consumeable and self.config.center.demo then 
-                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["Tarot"], G.c_locked.pos)
-                elseif not self.params.bypass_discovery_center and (_center.set == 'Edition' or _center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher' or _center.set == 'Booster') and not _center.discovered then 
-                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[_center.atlas or _center.set], 
-                    (_center.set == 'Joker' and G.j_undiscovered.pos) or 
-                    (_center.set == 'Edition' and G.j_undiscovered.pos) or 
-                    (_center.set == 'Tarot' and G.t_undiscovered.pos) or 
-                    (_center.set == 'Planet' and G.p_undiscovered.pos) or 
-                    (_center.set == 'Spectral' and G.s_undiscovered.pos) or 
-                    (_center.set == 'Voucher' and G.v_undiscovered.pos) or 
-                    (_center.set == 'Booster' and G.booster_undiscovered.pos))
-                elseif _center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher' then
-                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[_center.set], self.config.center.pos)
-                else
-                    self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[_center.atlas or 'centers'], _center.pos)
-                end
+                self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading'], self.ability.trading.pos)
                 self.children.center.states.hover = self.states.hover
                 self.children.center.states.click = self.states.click
                 self.children.center.states.drag = self.states.drag
                 self.children.center.states.collide.can = false
                 self.children.center:set_role({major = self, role_type = 'Glued', draw_major = self})
-            end
-            if _center.name == 'Half Joker' and (_center.discovered or self.bypass_discovery_center) then 
-                self.children.center.scale.y = self.children.center.scale.y/1.7
-            end
-            if _center.name == 'Photograph' and (_center.discovered or self.bypass_discovery_center) then 
-                self.children.center.scale.y = self.children.center.scale.y/1.2
-            end
-            if _center.name == 'Square Joker' and (_center.discovered or self.bypass_discovery_center) then 
-                self.children.center.scale.y = self.children.center.scale.x
             end
         end
 
@@ -1370,6 +1395,19 @@ SMODS.trigger_effects = function(effects, card)
     end
     return ret
 end
+
+local old_calc_indiv = SMODS.calculate_individual_effect
+SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, from_edition)
+    local result = old_calc_indiv(effect, scored_card, key, amount, from_edition)
+    if (key == 'cards') and (#effect.cards >= 1) then
+        for k = #effect.cards - 1, 1, -1 do
+            card_eval_status_text(effect.cards[k], 'jokers', nil, nil, nil, effect)
+        end
+    end
+    return result
+end
+
+table.insert(SMODS.calculation_keys, 'cards')
 
 ----------------------------------------------
 ------------MOD CODE END----------------------
