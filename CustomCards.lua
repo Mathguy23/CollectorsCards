@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.6
+--- VERSION: 1.0.7
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -1390,6 +1390,11 @@ SMODS.trigger_effects = function(effects, card)
         if effect_table.trading_cards then
             for i = 1, #effect_table.trading_cards do
                 SMODS.calculate_effect_table_key(effect_table.trading_cards, i, card, ret)
+            end
+        end
+        if effect_table.grim_stuff then
+            for i = 1, #effect_table.grim_stuff do
+                SMODS.calculate_effect_table_key(effect_table.grim_stuff, i, card, ret)
             end
         end
     end
