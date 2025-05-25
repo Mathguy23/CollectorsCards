@@ -461,7 +461,7 @@ payload = '''if not context.no_trading then
                 end
             end
         end
-        local exotic_eval = card:calculate_exotic({cardarea = context.cardarea, end_of_round = true})
+        local exotic_eval = card:calculate_exotic({cardarea = context.cardarea, end_of_round = true, game_over = context.game_over})
         if exotic_eval then
             for l = 1, #exotic_eval do
                 table.insert(new_table, exotic_eval[l])
@@ -785,5 +785,15 @@ payload = '''if G.hand and G.hand.cards and G.hand.cards[1] then
     for i = 1, #G.hand.cards do
         G.hand.cards[i]:calculate_exotic({selling_card = card})
     end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.GAME.blind:set_blind(G.GAME.round_resets.blind)'''
+position = 'after'
+payload = '''for i = 1, #G.playing_cards do
+    G.playing_cards[i]:calculate_exotic({setting_blind = true, blind = G.GAME.round_resets.blind})
 end'''
 match_indent = true
