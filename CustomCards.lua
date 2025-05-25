@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.7
+--- VERSION: 1.0.8
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -123,8 +123,8 @@ G.FUNCS.your_collection_trading_page = function(args)
     INIT_COLLECTION_CARD_ALERTS()
 end
 
-function Card:calculate_exotic(context, do_repeat)
-    local new_do_repeat = {self}
+function Card:calculate_exotic(context, do_repeat, blueprint_card)
+    local new_do_repeat = {blueprint_card or self}
     if do_repeat then
         for j = 1, #do_repeat do
             table.insert(new_do_repeat, do_repeat[j])
@@ -163,6 +163,57 @@ function Card:calculate_exotic(context, do_repeat)
             return {}
         end
     end
+    if not (context.does_score or context.is_suit or context.get_id or context.is_face) then
+        if self.ability.trading.name == "Blueprint" then
+            local next_card = nil
+            if self.area == G.play then
+                local index = -1
+                for i = 1, #G.play.cards do
+                    if G.play.cards[i] == self then
+                        index = i
+                        break
+                    end
+                end
+                if index ~= #G.play.cards then
+                    next_card = G.play.cards[index + 1]
+                end
+            elseif self.area == G.hand then
+                local index = -1
+                for i = 1, #G.hand.cards do
+                    if G.hand.cards[i] == self then
+                        index = i
+                        break
+                    end
+                end
+                if index ~= #G.hand.cards then
+                    next_card = G.hand.cards[index + 1]
+                end
+            end
+            if next_card and (next_card ~= self) and (next_card ~= blueprint_card) and next_card.ability and next_card.ability.trading and next_card.ability.trading.is_joker and not next_card.ability.trading.blueprint_incompat then
+                local new_context = {blueprint = true}
+                for i, j in pairs(context) do
+                    new_context[i] = j
+                end
+                return next_card:calculate_exotic(new_context, do_repeat, blueprint_card or self)
+            end
+        end
+        if self.ability.trading.name == "Brainstorm" then
+            local next_card = nil
+            if self.area == G.play then
+                next_card =  G.play.cards[1]
+            elseif self.area == G.hand then
+                next_card =  G.hand.cards[1]
+            end
+
+            if next_card and (next_card ~= self) and (next_card ~= blueprint_card) and next_card.ability and next_card.ability.trading and next_card.ability.trading.is_joker and not next_card.ability.trading.blueprint_incompat then
+                local new_context = {blueprint = true}
+                for i, j in pairs(context) do
+                    new_context[i] = j
+                end
+                return next_card:calculate_exotic(new_context, do_repeat, blueprint_card or self)
+            end
+        end
+    end
     local effects = {}
     local reps = {1}
     local i = 1
@@ -170,7 +221,7 @@ function Card:calculate_exotic(context, do_repeat)
         local valid = true
         if do_repeat and (i ~= 1) then
             for j = 1, #do_repeat do
-                if (i ~= 1) and (do_repeat[j] == self) then
+                if (i ~= 1) and (do_repeat[j] == (blueprint_card or self)) then
                     valid = false
                 end
             end
@@ -180,9 +231,17 @@ function Card:calculate_exotic(context, do_repeat)
                 if reps[i] then
                     if reps[i].cards then
                         if context.using_consumeable then
-                            for j = ((context.individual) and (context.cardarea == G.play) and 1) or 1, #reps[i].cards do
+                            for j = 1, #reps[i].cards do
                                 local m = reps[i]
                                 card_eval_status_text(m.cards[j], 'jokers', nil, nil, nil, m)
+                            end
+                        elseif context.playing_card_main or context.individual then
+                            for j = 1, #reps[i].cards do
+                                local m = reps[i]
+                                table.insert(effects, {
+                                    extra = {focus = m.cards[j], message = m.message},
+                                    card = m.cards[j]
+                                })
                             end
                         end
                     end
@@ -190,11 +249,18 @@ function Card:calculate_exotic(context, do_repeat)
             end
             local config_thing = self.ability.trading.config 
             if self.ability.trading.key and pc_cross_mod_cards[self.ability.trading.key] and pc_cross_mod_cards[self.ability.trading.key].calculate then
-                local result = pc_cross_mod_cards[self.ability.trading.key].calculate(self, effects, context, reps)
+                local result = pc_cross_mod_cards[self.ability.trading.key].calculate(self, effects, context, reps, blueprint_card, i)
                 if result ~= nil then
                     return result
                 end
-            elseif context.individual and (context.cardarea == G.play) then
+                if context.does_score then
+                    return false
+                elseif context.get_id then
+                    return -math.random(100, 1000000)
+                elseif context.is_suit or context.is_face then
+                    return false
+                end
+            elseif context.individual and (context.cardarea == G.play) and not context.end_of_round then
                 if self.area == G.play then
                     if name == "Golden Ratio" then
                         local first_fib = nil
@@ -216,12 +282,12 @@ function Card:calculate_exotic(context, do_repeat)
                 elseif self.area == G.hand then
 
                 end
-            elseif context.individual and (context.cardarea == G.hand) then
+            elseif context.individual and (context.cardarea == G.hand) and not context.end_of_round then
                 if self.area == G.play then
                     if name == "Pocket Ace" then
                         if context.other_card:get_id() == 14 then
                             table.insert(effects, {
-                                pc_h_chips = config_thing.h_chips,
+                                chips = config_thing.h_chips,
                                 card = self
                             })
                         end
@@ -443,85 +509,89 @@ function Card:calculate_exotic(context, do_repeat)
                     end
                 end
             elseif context.pre_discard then
-                if name == "Haunted Card" then
-                    card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
-                    local size = math.min(#G.deck.cards, config_thing.cards)
-                    G.E_MANAGER:add_event(Event({
-                        trigger = 'before',
-                        delay = 0.1,
-                        func = function()
-                            phantom_cards = true
-                            return true
-                        end
-                    }))
-                    G.GAME.pc_hand_size_bonus = (G.GAME.pc_hand_size_bonus or 0) + config_thing.cards
-                    for i = 1, config_thing.cards do
-                        draw_card(G.deck,G.hand, i*100/size,'up', true)
-                        delay(0.1)
-                    end
-                    G.E_MANAGER:add_event(Event({
-                        trigger = 'before',
-                        delay = 0.1,
-                        func = function()
-                            phantom_cards = nil
-                            return true
-                        end
-                    }))
-                end
-            elseif context.before then
-                if name == "Rules Card" then
-                    ease_discard(1)
-                    card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_discards',vars={config_thing.discards}}, colour = G.C.RED})
-                elseif name == "Wild Draw 4" then
-                    card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
-                    local size = math.min(#G.deck.cards, config_thing.cards)
-                    for i = 1, config_thing.cards do
-                        draw_card(G.deck,G.hand, i*100/size,'up', true)
-                        delay(0.1)
-                    end
-                elseif name == "2mbstone" then
-                    if (G.consumeables.config.card_limit > #G.consumeables.cards + G.GAME.consumeable_buffer) and (pseudorandom('tom') < G.GAME.probabilities.normal/config_thing.odds) then
-                        card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
-                        G.GAME.consumeable_buffer = (G.GAME.consumeable_buffer or 0) + 1
-                        G.E_MANAGER:add_event(Event({func = function()
-                            local card = create_card('', G.consumeables, nil, nil, nil, nil, 'c_death', 'fool')
-                            card:add_to_deck()
-                            G.consumeables:emplace(card)
-                            G.GAME.consumeable_buffer = 0
-                        return true end }))
-                    end
-                elseif name == "Executor" then
-                    local pool = {}
-                    for j = 1, #G.hand.cards do
-                        if not G.hand.cards[j].getting_sliced then
-                            table.insert(pool, G.hand.cards[j])
-                        end
-                    end
-                    if #pool > 0 then
-                        local card = pseudorandom_element(pool, pseudoseed('exec'))
-                        card.getting_sliced = true
-                        if card.ability and (card.ability.name == 'Glass Card') then 
-                            card:shatter()
-                        else
-                            card:start_dissolve()
-                        end
-                        config_thing.destroyed = config_thing.destroyed + 1
-                        if config_thing.destroyed >= config_thing.destroys then
-                            config_thing.destroyed = 0
-                            G.E_MANAGER:add_event(Event({ func = function()
-                                local card = copy_card(self, nil, nil, true)
-                                card:flip()
-                                G.deck:emplace(card)
-                                table.insert(G.playing_cards, card)
+                if self.highlighted then
+                    if name == "Haunted Card" then
+                        card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
+                        local size = math.min(#G.deck.cards, config_thing.cards)
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'before',
+                            delay = 0.1,
+                            func = function()
+                                phantom_cards = true
                                 return true
                             end
-                            }))
+                        }))
+                        G.GAME.pc_hand_size_bonus = (G.GAME.pc_hand_size_bonus or 0) + config_thing.cards
+                        for i = 1, config_thing.cards do
+                            draw_card(G.deck,G.hand, i*100/size,'up', true)
+                            delay(0.1)
+                        end
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'before',
+                            delay = 0.1,
+                            func = function()
+                                phantom_cards = nil
+                                return true
+                            end
+                        }))
+                    end
+                end
+            elseif context.before then
+                if context.cardarea == G.play then
+                    if name == "Rules Card" then
+                        ease_discard(1)
+                        card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_discards',vars={config_thing.discards}}, colour = G.C.RED})
+                    elseif name == "Wild Draw 4" then
+                        card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
+                        local size = math.min(#G.deck.cards, config_thing.cards)
+                        for i = 1, config_thing.cards do
+                            draw_card(G.deck,G.hand, i*100/size,'up', true)
+                            delay(0.1)
+                        end
+                    elseif name == "2mbstone" then
+                        if (G.consumeables.config.card_limit > #G.consumeables.cards + G.GAME.consumeable_buffer) and (pseudorandom('tom') < G.GAME.probabilities.normal/config_thing.odds) then
+                            card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
+                            G.GAME.consumeable_buffer = (G.GAME.consumeable_buffer or 0) + 1
+                            G.E_MANAGER:add_event(Event({func = function()
+                                local card = create_card('', G.consumeables, nil, nil, nil, nil, 'c_death', 'fool')
+                                card:add_to_deck()
+                                G.consumeables:emplace(card)
+                                G.GAME.consumeable_buffer = 0
+                            return true end }))
+                        end
+                    elseif name == "Executor" then
+                        local pool = {}
+                        for j = 1, #G.hand.cards do
+                            if not G.hand.cards[j].getting_sliced then
+                                table.insert(pool, G.hand.cards[j])
+                            end
+                        end
+                        if #pool > 0 then
+                            local card = pseudorandom_element(pool, pseudoseed('exec'))
+                            card.getting_sliced = true
+                            if card.ability and (card.ability.name == 'Glass Card') then 
+                                card:shatter()
+                            else
+                                card:start_dissolve()
+                            end
+                            config_thing.destroyed = config_thing.destroyed + 1
+                            if config_thing.destroyed >= config_thing.destroys then
+                                config_thing.destroyed = 0
+                                G.E_MANAGER:add_event(Event({ func = function()
+                                    local card = copy_card(self, nil, nil, true)
+                                    card:flip()
+                                    G.deck:emplace(card)
+                                    table.insert(G.playing_cards, card)
+                                    return true
+                                end
+                                }))
+                            end
                         end
                     end
                 end
             elseif context.destroying_card then
                 if name == ":3" then
-                    if config_thing.scored >= config_thing.scores then
+                    if (context.destroying_card == self) and (context.cardarea == G.play) and (config_thing.scored >= config_thing.scores) then
                         return true
                     end
                 end
@@ -749,11 +819,11 @@ function Card:calculate_exotic(context, do_repeat)
             end
             if do_repeat and next(effects) and (i == 1) then
                 for j = 1, #do_repeat do
-                    if do_repeat[j] == self then
+                    if do_repeat[j] == (blueprint_card or self) then
                         return {}
                     end
                 end
-                local eval = eval_card(self, {cardarea = self.area, repetition = true, repetition_only = true, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = self}}})
+                local eval = eval_card(blueprint_card or self, {cardarea = self.area, repetition = true, repetition_only = true, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = blueprint_card or self}}})
                 if next(eval) then 
                     local new_table = {eval.seals.card}
                     for g = 1, #do_repeat do
@@ -771,9 +841,9 @@ function Card:calculate_exotic(context, do_repeat)
                 --from Jokers
                 for l=1, #G.jokers.cards do
                     --calculate the joker effects
-                    local eval = eval_card(G.jokers.cards[l], {cardarea = self.area, other_card = self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = self}}})
+                    local eval = eval_card(G.jokers.cards[l], {cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = blueprint_card or self}}})
                     if eval and next(eval) then 
-                        local new_table = {eval.jokers.card}
+                        local new_table = {G.jokers.cards[l]}
                         for g = 1, #do_repeat do
                             table.insert(new_table, do_repeat[g])
                         end
@@ -790,7 +860,7 @@ function Card:calculate_exotic(context, do_repeat)
                 if context.scoring_hand then
                     for l=1, #context.scoring_hand do
                         --calculate the joker effects
-                        local eval = context.scoring_hand[l]:calculate_exotic({cardarea = self.area, other_card = self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands}, new_do_repeat)
+                        local eval = context.scoring_hand[l]:calculate_exotic({cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands}, new_do_repeat)
                         if next(eval) then
                             for _, minieval in ipairs(eval) do
                                 if minieval.repetitions then
@@ -805,7 +875,7 @@ function Card:calculate_exotic(context, do_repeat)
 
                 for l=1, #G.hand.cards do
                     --calculate the joker effects
-                    local eval = G.hand.cards[l]:calculate_exotic({cardarea = self.area, other_card = self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands}, new_do_repeat)
+                    local eval = G.hand.cards[l]:calculate_exotic({cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands}, new_do_repeat)
                     if next(eval) then
                         for _, minieval in ipairs(eval) do
                             if minieval.repetitions then
@@ -1091,7 +1161,9 @@ function get_trading_key()
     rng_table = {}
     for i, j in pairs(G.P_TRADING) do
         if (not j.in_pool or j:in_pool()) and (not pc_cross_mod_cards[i] or not pc_cross_mod_cards[i].in_pool or pc_cross_mod_cards[i].in_pool()) then
-            rng_table[i] = j
+            if not j.is_joker then
+                rng_table[i] = j
+            end
         end
     end
     local _, key = pseudorandom_element(rng_table, pseudoseed('trading'))
@@ -1222,10 +1294,10 @@ function Card:set_sprites(_center, _front)
     if _center and self.ability and self.ability.trading and self.ability.trading.atlas then 
         if _center.set then
             if self.children.center then
-                self.children.center.atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading']
+                self.children.center.atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or self.ability.trading.atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading']
                 self.children.center:set_sprite_pos(self.ability.trading.pos)
             else
-                self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading'], self.ability.trading.pos)
+                self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or self.ability.trading.atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading'], self.ability.trading.pos)
                 self.children.center.states.hover = self.states.hover
                 self.children.center.states.click = self.states.click
                 self.children.center.states.drag = self.states.drag
@@ -1236,6 +1308,11 @@ function Card:set_sprites(_center, _front)
 
         if _center.soul_pos then 
             self.children.floating_sprite = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['Joker'], self.config.center.soul_pos)
+            self.children.floating_sprite.role.draw_major = self
+            self.children.floating_sprite.states.hover.can = false
+            self.children.floating_sprite.states.click.can = false
+        elseif self.ability.trading.soul_pos then
+            self.children.floating_sprite = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or self.ability.trading.atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading'], self.ability.trading.soul_pos)
             self.children.floating_sprite.role.draw_major = self
             self.children.floating_sprite.states.hover.can = false
             self.children.floating_sprite.states.click.can = false
@@ -1399,6 +1476,19 @@ SMODS.trigger_effects = function(effects, card)
         end
     end
     return ret
+end
+
+local old_calculate_context = SMODS.calculate_context
+function SMODS.calculate_context(context, return_table)
+    if context.remove_playing_cards then
+        for i = 1, #G.hand.cards do
+            G.hand.cards[i]:calculate_exotic({remove_playing_cards = true, removed = context.removed, cardarea = G.hand})
+        end
+        for i = 1, #G.play.cards do
+            G.play.cards[i]:calculate_exotic({remove_playing_cards = true, removed = context.removed, cardarea = G.play})
+        end
+    end
+    return old_calculate_context(context, return_table)
 end
 
 local old_calc_indiv = SMODS.calculate_individual_effect

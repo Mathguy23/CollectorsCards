@@ -223,7 +223,7 @@ target = 'functions/common_events.lua'
 pattern = '''function eval_card(card, context)'''
 position = 'after'
 payload = '''   local special_eval = nil
-    if context.discard and (context.full_hand == G.hand.highlighted) then
+    if context.discard and (context.full_hand == G.hand.highlighted) and not context.no_trading then
         special_eval = card:calculate_exotic({discard = true, full_hand = G.hand.highlighted, other_card = context.other_card}, {})
     end
     if special_eval and special_eval.remove then
@@ -236,8 +236,8 @@ match_indent = true
 target = 'functions/state_events.lua'
 pattern = '''local cards = {}'''
 position = 'before'
-payload = '''for j = 1, #G.hand.highlighted do
-    G.hand.highlighted[j]:calculate_exotic({pre_discard = true, full_hand = G.hand.highlighted}, {})
+payload = '''for j = 1, #G.hand.cards do
+    G.hand.cards[j]:calculate_exotic({pre_discard = true, full_hand = G.hand.highlighted, hook = hook}, {})
 end'''
 match_indent = true
 
@@ -248,6 +248,9 @@ pattern = '''local hand_text_set = false'''
 position = 'before'
 payload = '''for k=1, #G.play.cards do
     G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
+end
+for k=1, #G.hand.cards do
+    G.hand.cards[k]:calculate_exotic({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
 end'''
 match_indent = true
 
@@ -269,7 +272,7 @@ match_indent = true
 target = 'card.lua'
 pattern = '''if self.children.use_button then self.children.use_button:remove(); self.children.use_button = nil end'''
 position = 'after'
-payload = '''if self.children.rank_button then self.children.use_button:remove(); self.children.rank_button = nil end'''
+payload = '''if self.children.rank_button then self.children.rank_button:remove(); self.children.rank_button = nil end'''
 match_indent = true
 
 [[patches]]
@@ -299,9 +302,39 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
-pattern = '''if destroyed then'''
+pattern = '''local cards_destroyed = {}'''
+position = 'after'
+payload = '''for i = 1, #scoring_hand do
+    for j = 1, #scoring_hand do
+        if scoring_hand[j]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards, cardarea = G.play}) == true then 
+            cards_destroyed[#cards_destroyed + 1] = scoring_hand[i]
+        end
+    end
+    for j = 1, #G.hand.cards do
+        if G.hand.cards[j]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards, cardarea = G.hand}) == true then 
+            cards_destroyed[#cards_destroyed + 1] = scoring_hand[i]
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''local glass_shattered = {}'''
 position = 'before'
-payload = '''if scoring_hand[i]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards}) == true then destroyed = true end'''
+payload = '''local remove_indexes = {}
+for i = 1, #cards_destroyed do
+    for j = i + 1, #cards_destroyed do
+        if (i ~= j) and (cards_destroyed[i] == cards_destroyed[j]) then
+            table.insert(remove_indexes, i)
+            break
+        end
+    end
+end
+for i = #remove_indexes, -1, 1 do
+    table.remove(cards_destroyed, remove_indexes[i])
+end'''
 match_indent = true
 
 [[patches]]
@@ -344,6 +377,9 @@ pattern = '''if G.GAME.modifiers.debuff_played_cards then'''
 position = 'before'
 payload = '''for k=1, #G.play.cards do
     G.play.cards[k]:calculate_exotic({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true})
+end
+for k=1, #G.hand.cards do
+    G.hand.cards[k]:calculate_exotic({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true})
 end'''
 match_indent = true
 
@@ -366,40 +402,60 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = 'functions/common_events.lua'
-pattern = '''local ret = {}'''
-position = 'after'
-payload = '''if context.main_scoring and not context.no_trading then
+pattern = '''if context.repetition_only then'''
+position = 'before'
+payload = '''if not context.no_trading then
     local new_context = {no_trading = true}
     for i, j in pairs(context) do
         new_context[i] = j
     end
     local effects = {eval_card(card, new_context)}
     local new_table = {}
-    if context.scoring_hand then
-        for k=1, #context.scoring_hand do
-            local eval = context.scoring_hand[k]:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, other_card = card, individual = true, pc_end_round = context.end_of_round}, {})
+    if context.main_scoring then
+        if context.scoring_hand then
+            for k=1, #context.scoring_hand do
+                local eval = context.scoring_hand[k]:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, other_card = card, individual = true}, {})
+                if eval then 
+                    for l = 1, #eval do
+                        table.insert(new_table, eval[l])
+                    end
+                end
+            end
+        end
+        for k=1, #G.hand.cards do
+            local eval = G.hand.cards[k]:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, other_card = card, individual = true}, {})
             if eval then 
                 for l = 1, #eval do
                     table.insert(new_table, eval[l])
                 end
             end
         end
-    end
-    for k=1, #G.hand.cards do
-        local eval = G.hand.cards[k]:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, other_card = card, individual = true, pc_end_round = context.end_of_round}, {})
-        if eval then 
-            for l = 1, #eval do
-                table.insert(new_table, eval[l])
+        local exotic_eval = card:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, playing_card_hand = (context.cardarea == G.hand), playing_card_main = (context.cardarea == G.play)})
+        if exotic_eval then
+            for l = 1, #exotic_eval do
+                table.insert(new_table, exotic_eval[l])
             end
         end
     end
-    local exotic_eval = card:calculate_exotic({cardarea = context.cardarea, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, playing_card_hand = (context.cardarea == G.hand), playing_card_main = (context.cardarea == G.play), pc_end_round = context.end_of_round})
-    if exotic_eval then
-        for l = 1, #exotic_eval do
-            table.insert(new_table, exotic_eval[l])
+    if context.end_of_round and (context.cardarea == G.hand) and not context.individual and not context.repetition and not context.playing_card_end_of_round then
+        for k=1, #G.hand.cards do
+            local eval = G.hand.cards[k]:calculate_exotic({cardarea = context.cardarea, other_card = card, individual = true, end_of_round = true}, {})
+            if eval and next(eval) then 
+                for l = 1, #eval do
+                    table.insert(new_table, eval[l])
+                end
+            end
+        end
+        local exotic_eval = card:calculate_exotic({cardarea = context.cardarea, end_of_round = true})
+        if exotic_eval then
+            for l = 1, #exotic_eval do
+                table.insert(new_table, exotic_eval[l])
+            end
         end
     end
-    effects[1]['trading_cards'] = new_table
+    if next(new_table) then
+        effects[1]['trading_cards'] = new_table
+    end
     return unpack(effects)
 end'''
 match_indent = true
@@ -677,4 +733,42 @@ if not hand_is_free then
     ease_hands_played(-1)
 end
 hand_is_free = nil'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''play_area_status_text("Not Allowed!")--localize('k_not_allowed_ex'), true)'''
+position = 'after'
+payload = '''for k=1, #scoring_hand do
+    scoring_hand[k]:calculate_exotic({cardarea = G.play, debuffed_hand = true})
+end
+for k=1, #G.hand.cards do
+    G.hand.cards[k]:calculate_exotic({cardarea = G.hand, debuffed_hand = true})
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.RESET_JIGGLES = true'''
+position = 'after'
+payload = '''
+G.GAME.blind_attack = nil
+local skill_saved = false
+for i = 1, #G.playing_cards do
+    G.playing_cards[i]:calculate_exotic({total_end_of_round = true})
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''card:sell_card()'''
+position = 'after'
+payload = '''if G.hand and G.hand.cards and G.hand.cards[1] then
+    for i = 1, #G.hand.cards do
+        G.hand.cards[i]:calculate_exotic({selling_card = card})
+    end
+end'''
 match_indent = true
