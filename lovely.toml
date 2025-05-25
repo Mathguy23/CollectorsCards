@@ -307,11 +307,21 @@ position = 'after'
 payload = '''for i = 1, #scoring_hand do
     for j = 1, #scoring_hand do
         if scoring_hand[j]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards, cardarea = G.play}) == true then 
+            if SMODS.shatters(scoring_hand[i]) then
+                scoring_hand[i].shattered = true
+            else
+                scoring_hand[i].destroyed = true
+            end
             cards_destroyed[#cards_destroyed + 1] = scoring_hand[i]
         end
     end
     for j = 1, #G.hand.cards do
         if G.hand.cards[j]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards, cardarea = G.hand}) == true then 
+            if SMODS.shatters(scoring_hand[i]) then
+                scoring_hand[i].shattered = true
+            else
+                scoring_hand[i].destroyed = true
+            end
             cards_destroyed[#cards_destroyed + 1] = scoring_hand[i]
         end
     end
@@ -321,12 +331,17 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
-pattern = '''local glass_shattered = {}'''
+pattern = '''-- context.remove_playing_cards calculations'''
 position = 'before'
 payload = '''local remove_indexes = {}
 for i = 1, #cards_destroyed do
     for j = i + 1, #cards_destroyed do
         if (i ~= j) and (cards_destroyed[i] == cards_destroyed[j]) then
+            for k = 1, #remove_indexes do
+                if remove_indexes[k] == i then
+                    break
+                end
+            end
             table.insert(remove_indexes, i)
             break
         end

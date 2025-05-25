@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.8
+--- VERSION: 1.0.8b
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
