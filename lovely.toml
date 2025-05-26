@@ -209,10 +209,15 @@ match_indent = true
 target = 'card.lua'
 pattern = '''function Card:set_ability(center, initial, delay_sprites)'''
 position = 'after'
-payload = '''   if self.ability and self.ability.trading and (center ~= G.P_CENTERS["m_pc_trading"]) then
+payload = '''   if self.force_trading and (center == G.P_CENTERS["m_pc_trading"]) then
+        local key = G.P_TRADING[self.force_trading]
+        self.force_trading = nil
+        self.ability.trading = copy_table(key)
+    elseif self.ability and self.ability.trading and (center ~= G.P_CENTERS["m_pc_trading"]) then
         self.ability.trading = nil
     elseif self.ability and not self.ability.trading and (center == G.P_CENTERS["m_pc_trading"]) then
         local key = G.P_TRADING[get_trading_key()]
+        self.force_trading = nil
         self.ability.trading = copy_table(key)
     end'''
 match_indent = true

@@ -912,8 +912,8 @@ SMODS.Tarot {
         for i=1, #G.hand.highlighted do
             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function()
                 local key = get_trading_key()
+                G.hand.highlighted[i].force_trading = key
                 G.hand.highlighted[i]:set_ability(G.P_CENTERS["m_pc_trading"])
-                G.hand.highlighted[i].ability.trading = copy_table(G.P_TRADING[key])
                 G.hand.highlighted[i]:set_base(G.P_CARDS[G.P_TRADING[key].base])
                 G.hand.highlighted[i]:set_sprites(G.hand.highlighted[i].config.center)
                 return true 
@@ -1431,6 +1431,18 @@ function SMODS.never_scores(card)
     else
         return old_never_scores(card)
     end
+end
+
+local old_no_rank = SMODS.has_no_rank
+function SMODS.has_no_rank(card)
+    local result = old_no_rank(card)
+    if not result and card and card.ability and card.ability.trading then
+        local id = card:calculate_exotic({get_id = true})
+        if id < 0 then
+            return true
+        end
+    end
+    return result
 end
 
 table.insert(SMODS.calculation_keys, 'pc_h_chips')
