@@ -224,20 +224,6 @@ match_indent = true
 
 [[patches]]
 [patches.pattern]
-target = 'functions/common_events.lua'
-pattern = '''function eval_card(card, context)'''
-position = 'after'
-payload = '''   local special_eval = nil
-    if context.discard and (context.full_hand == G.hand.highlighted) and not context.no_trading then
-        special_eval = card:calculate_exotic({discard = true, full_hand = G.hand.highlighted, other_card = context.other_card}, {})
-    end
-    if special_eval and special_eval.remove then
-        ret.remove = true
-    end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
 target = 'functions/state_events.lua'
 pattern = '''local cards = {}'''
 position = 'before'
@@ -424,7 +410,14 @@ match_indent = true
 target = 'functions/common_events.lua'
 pattern = '''if context.repetition_only then'''
 position = 'before'
-payload = '''if not context.no_trading then
+payload = '''local special_eval = nil
+    if context.discard and (context.full_hand == G.hand.highlighted) and not context.no_trading then
+        special_eval = card:calculate_exotic({discard = true, full_hand = G.hand.highlighted, other_card = context.other_card}, {})
+    end
+    if special_eval and special_eval.remove then
+        ret.remove = true
+    end
+if not context.no_trading then
     local new_context = {no_trading = true}
     for i, j in pairs(context) do
         new_context[i] = j
@@ -800,5 +793,15 @@ pattern = '''G.GAME.blind:set_blind(G.GAME.round_resets.blind)'''
 position = 'after'
 payload = '''for i = 1, #G.playing_cards do
     G.playing_cards[i]:calculate_exotic({setting_blind = true, blind = G.GAME.round_resets.blind})
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''SMODS.calculate_context({open_booster = true, card = self})'''
+position = 'before'
+payload = '''for i = 1, #G.playing_cards do
+    G.playing_cards[i]:calculate_exotic({open_booster = true, card = self})
 end'''
 match_indent = true

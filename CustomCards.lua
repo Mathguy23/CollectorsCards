@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.8d
+--- VERSION: 1.0.9
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -72,8 +72,8 @@ function create_UIBox_Trading()
                 local trading = G.P_CENTER_POOLS['Exotic'][i+(j-1)*(5)]
                 local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS[trading.base], G.P_CENTERS.c_base)
                 card:start_materialize(nil, i>1 or j>1)
+                card.force_trading = trading.key
                 card:set_ability(G.P_CENTERS["m_pc_trading"], true)
-                card.ability.trading = copy_table(trading)
                 card:set_sprites(card.config.center)
                 G.your_collection[j]:emplace(card)
                 card.playing_card = true
@@ -113,8 +113,8 @@ G.FUNCS.your_collection_trading_page = function(args)
             local trading = G.P_CENTER_POOLS['Exotic'][i+(j-1)*5 + (5*#G.your_collection*(args.cycle_config.current_option - 1))]
             if not trading then break end
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS[trading.base], G.P_CENTERS.c_base)
+            card.force_trading = trading.key
             card:set_ability(G.P_CENTERS["m_pc_trading"], true)
-            card.ability.trading = copy_table(trading)
             card:set_sprites(card.config.center)
             G.your_collection[j]:emplace(card)
             card.playing_card = true
@@ -124,15 +124,24 @@ G.FUNCS.your_collection_trading_page = function(args)
 end
 
 function Card:calculate_exotic(context, do_repeat, blueprint_card)
-    local new_do_repeat = {blueprint_card or self}
+    local new_context = {}
+    for i, j in pairs(context) do
+        new_context[i] = j
+    end
+    new_context.retrigger_chain = new_context.retrigger_chain or {}
+    table.insert(new_context.retrigger_chain, blueprint_card or self)
+    context = new_context
+    local new_do_repeat = {}
+    local red_seal_only = not do_repeat
     if do_repeat then
         for j = 1, #do_repeat do
             table.insert(new_do_repeat, do_repeat[j])
         end
     end
+    local can_retrigger = false
     if self.ability and self.doubled_down and context.after then
+        self.force_trading = 'double_down'
         self:set_ability(G.P_CENTERS["m_pc_trading"])
-        self.ability.trading = copy_table(G.P_TRADING['double_down'])
         self:set_sprites(self.config.center)
         local doubled = self.doubled_down
         self.doubled_down = nil
@@ -219,29 +228,15 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
     local i = 1
     while (i <= #reps) do
         local valid = true
-        if do_repeat and (i ~= 1) then
-            for j = 1, #do_repeat do
-                if (i ~= 1) and (do_repeat[j] == (blueprint_card or self)) then
-                    valid = false
-                end
-            end
-        end
         if valid then
             if i ~= 1 then
                 if reps[i] then
                     if reps[i].cards then
-                        if context.using_consumeable then
+                        if (context.does_score or context.is_suit or context.is_face or context.get_id or context.individual or context.playing_card_main or context.playing_card_hand or context.repetition) then
+                        else
                             for j = 1, #reps[i].cards do
                                 local m = reps[i]
                                 card_eval_status_text(m.cards[j], 'jokers', nil, nil, nil, m)
-                            end
-                        elseif context.playing_card_main or context.individual then
-                            for j = 1, #reps[i].cards do
-                                local m = reps[i]
-                                table.insert(effects, {
-                                    extra = {focus = m.cards[j], message = m.message},
-                                    card = m.cards[j]
-                                })
                             end
                         end
                     end
@@ -506,6 +501,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                         else
                             card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_nope_ex'), colour = G.C.SECONDARY_SET.Tarot})
                         end
+                        can_retrigger = true
                     end
                 end
             elseif context.pre_discard then
@@ -534,6 +530,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                                 return true
                             end
                         }))
+                        can_retrigger = true
                     end
                 end
             elseif context.before then
@@ -541,6 +538,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     if name == "Rules Card" then
                         ease_discard(1)
                         card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_discards',vars={config_thing.discards}}, colour = G.C.RED})
+                        can_retrigger = true
                     elseif name == "Wild Draw 4" then
                         card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
                         local size = math.min(#G.deck.cards, config_thing.cards)
@@ -548,6 +546,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                             draw_card(G.deck,G.hand, i*100/size,'up', true)
                             delay(0.1)
                         end
+                        can_retrigger = true
                     elseif name == "2mbstone" then
                         if (G.consumeables.config.card_limit > #G.consumeables.cards + G.GAME.consumeable_buffer) and (pseudorandom('tom') < G.GAME.probabilities.normal/config_thing.odds) then
                             card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
@@ -558,6 +557,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                                 G.consumeables:emplace(card)
                                 G.GAME.consumeable_buffer = 0
                             return true end }))
+                            can_retrigger = true
                         end
                     elseif name == "Executor" then
                         local pool = {}
@@ -586,6 +586,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                                 end
                                 }))
                             end
+                            can_retrigger = true
                         end
                     end
                 end
@@ -637,6 +638,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                                 G.GAME.blind:debuff_card(card)
                                 G.hand:sort()
                             end
+                            can_retrigger = true
                         end
                     elseif name == "Bust Card" then
                         if context.facing_blind then
@@ -657,6 +659,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                                     card:set_debuff()
                                 end
                             end
+                            can_retrigger = true
                         end
                     end
                 end
@@ -686,6 +689,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                             end
                         }))
                         table.insert(effects, {})
+                        can_retrigger = true
                     end
                 end
             elseif context.does_score then
@@ -798,6 +802,10 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     for j = 1, #reps[i].cards do
                         table.insert(special_table, reps[i].cards[j])
                     end
+                else
+                    -- for j = 1, #do_repeat do
+                    --     table.insert(special_table, do_repeat[j])
+                    -- end
                 end
                 if context.cardarea == G.play then
                     if name == "Double Up"  then
@@ -817,73 +825,142 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     end
                 end
             end
-            if do_repeat and next(effects) and (i == 1) then
-                for j = 1, #do_repeat do
-                    if do_repeat[j] == (blueprint_card or self) then
-                        return {}
-                    end
-                end
-                local eval = eval_card(blueprint_card or self, {cardarea = self.area, repetition = true, repetition_only = true, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = blueprint_card or self}}})
-                if next(eval) then 
-                    local new_table = {eval.seals.card}
-                    for g = 1, #do_repeat do
-                        table.insert(new_table, do_repeat[g])
-                    end
-                    for h= 1, eval.seals.repetitions do
-                        reps[#reps+1] = {
-                            cards = new_table,
-                            message = eval.seals.message,
-                            repetitions = eval.seals.repetitions,
-                        }
-                    end
-                end
-
-                --from Jokers
-                for l=1, #G.jokers.cards do
-                    --calculate the joker effects
-                    local eval = eval_card(G.jokers.cards[l], {cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = blueprint_card or self}}})
-                    if eval and next(eval) then 
-                        local new_table = {G.jokers.cards[l]}
-                        for g = 1, #do_repeat do
-                            table.insert(new_table, do_repeat[g])
-                        end
-                        for h = 1, eval.jokers.repetitions do
-                            reps[#reps+1] = {
-                                cards = new_table,
-                                message = eval.jokers.message,
-                                repetitions = eval.jokers.repetitions,
-                            }
+            if not context.does_score and not context.is_suit and not context.is_face and not context.get_id and not context.playing_card_main and not context.playing_card_hand and not context.individual then
+                if do_repeat and (next(effects) or can_retrigger) and (i == 1) then
+                    local bans = {
+                        this_card = false,
+                        scoring_hand = {},
+                        hand = {},
+                        jokers = {},
+                    }
+                    if #context.retrigger_chain > 0 then
+                        for j = 1, #context.retrigger_chain do
+                                if context.retrigger_chain[j] == (self or blueprint_card) then
+                                    bans.this_card = true
+                                end
+                            if context.scoring_hand then
+                                for k = 1, #context.scoring_hand do
+                                    if context.retrigger_chain[j] == context.scoring_hand[k] then
+                                        bans.scoring_hand[k] = true
+                                    end
+                                end
+                            end
+                            for k = 1, #G.hand.cards do
+                                if context.retrigger_chain[j] == G.hand.cards[k] then
+                                    bans.hand[k] = true
+                                end
+                            end
+                            for k = 1, #G.jokers.cards do
+                                if context.retrigger_chain[j] == G.jokers.cards[k] then
+                                    bans.jokers[k] = true
+                                end
+                            end
                         end
                     end
-                end
+                    if true then
+                        local eval = eval_card(blueprint_card or self, {cardarea = self.area, repetition = true, repetition_only = true, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = blueprint_card or self}}})
+                        if next(eval) then 
+                            local new_table = {eval.seals.card}
+                            for g = 1, #do_repeat do
+                                table.insert(new_table, do_repeat[g])
+                            end
+                            for h= 1, eval.seals.repetitions do
+                                reps[#reps+1] = {
+                                    cards = new_table,
+                                    message = eval.seals.message,
+                                    repetitions = eval.seals.repetitions,
+                                }
+                            end
+                        end
+                    end
 
-                if context.scoring_hand then
-                    for l=1, #context.scoring_hand do
-                        --calculate the joker effects
-                        local eval = context.scoring_hand[l]:calculate_exotic({cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands}, new_do_repeat)
-                        if next(eval) then
-                            for _, minieval in ipairs(eval) do
-                                if minieval.repetitions then
-                                    for h = 1, minieval.repetitions do
-                                        reps[#reps+1] = minieval
+                    --from Jokers
+                    for l=1, #G.jokers.cards do
+                        if not bans.jokers[l] then
+                            --calculate the joker effects
+                            local eval = eval_card(G.jokers.cards[l], {cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, card_effects = {{card = blueprint_card or self}}})
+                            if eval and next(eval) then 
+                                local new_table = {G.jokers.cards[l]}
+                                for g = 1, #new_do_repeat do
+                                    table.insert(new_table, new_do_repeat[g])
+                                end
+                                for h = 1, eval.jokers.repetitions do
+                                    reps[#reps+1] = {
+                                        cards = new_table,
+                                        message = eval.jokers.message,
+                                        repetitions = eval.jokers.repetitions,
+                                    }
+                                end
+                            end
+                        end
+                    end
+
+                    if context.scoring_hand then
+                        for l=1, #context.scoring_hand do
+                            if not bans.scoring_hand[l] then
+                                --calculate the joker effects
+                                local new_new_do_repeat = {}
+                                for m = 1, #new_do_repeat do
+                                    new_new_do_repeat[#new_new_do_repeat + 1] = new_do_repeat[m]
+                                end
+                                local new_retrigger_chain = {}
+                                for i, j in ipairs(context.retrigger_chain) do
+                                    table.insert(new_retrigger_chain, j)
+                                end
+                                local eval = context.scoring_hand[l]:calculate_exotic({cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, retrigger_chain = new_retrigger_chain}, new_new_do_repeat)
+                                if next(eval) then
+                                    for _, minieval in ipairs(eval) do
+                                        if minieval.repetitions then
+                                            for h = 1, minieval.repetitions do
+                                                reps[#reps+1] = minieval
+                                            end
+                                        end
                                     end
                                 end
                             end
                         end
                     end
-                end
 
-                for l=1, #G.hand.cards do
-                    --calculate the joker effects
-                    local eval = G.hand.cards[l]:calculate_exotic({cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands}, new_do_repeat)
-                    if next(eval) then
-                        for _, minieval in ipairs(eval) do
-                            if minieval.repetitions then
-                                for h = 1, minieval.repetitions do
-                                    reps[#reps+1] = minieval
+                    for l=1, #G.hand.cards do
+                        if not bans.hand[l] then
+                            --calculate the joker effects
+                            local new_new_do_repeat = {}
+                            for m = 1, #new_do_repeat do
+                                new_new_do_repeat[#new_new_do_repeat + 1] = new_do_repeat[m]
+                            end
+                            local new_retrigger_chain = {}
+                            for i, j in ipairs(context.retrigger_chain) do
+                                table.insert(new_retrigger_chain, j)
+                            end
+                            local eval = G.hand.cards[l]:calculate_exotic({cardarea = self.area, other_card = blueprint_card or self, repetition = true, end_of_round = context.end_of_round, full_hand = context.full_hand, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, retrigger_chain = new_retrigger_chain}, new_new_do_repeat)
+                            if next(eval) then
+                                for _, minieval in ipairs(eval) do
+                                    if minieval.repetitions then
+                                        for h = 1, minieval.repetitions do
+                                            reps[#reps+1] = minieval
+                                        end
+                                    end
                                 end
                             end
                         end
+                    end
+                elseif red_seal_only and (next(effects) or can_retrigger) and (i == 1) and (self.seal == 'Red') then
+                    local bans = {
+                        this_card = false,
+                    }
+                    if #context.retrigger_chain > 0 then
+                        for j = 1, #context.retrigger_chain do
+                            if context.retrigger_chain[j] == (self or blueprint_card) then
+                                bans.this_card = true
+                            end
+                        end
+                    end
+                    if true then
+                        reps[#reps+1] = {
+                            cards = {self},
+                            message = localize('k_again_ex'),
+                            repetitions = 1,
+                        }
                     end
                 end
             end
@@ -984,7 +1061,8 @@ SMODS.Back {
                 for i = 1, 5 do
                     local key = G.P_TRADING[get_trading_key()]
                     local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
-                    _card.ability.trading = copy_table(key)
+                    _card.force_trading = key.key
+                    _card:set_ability(G.P_CENTERS['m_pc_trading'])
                     _card:set_sprites(_card.config.center)
                     G.deck:emplace(_card)
                     table.insert(G.playing_cards, _card)
@@ -1014,13 +1092,18 @@ SMODS.Booster {
     create_card = function(self, card)
         local key = G.P_TRADING[get_trading_key()]
         local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
-        _card.ability.trading = copy_table(key)
+        _card.force_trading = key.key
+        _card:set_ability(G.P_CENTERS['m_pc_trading'])
         _card:set_sprites(_card.config.center)
         local edition = poll_edition('trading_edition'..G.GAME.round_resets.ante, 1, true)
         _card:set_edition(edition)
         _card:set_seal(SMODS.poll_seal({mod = 3}))
         return _card
-    end
+    end,
+    ease_background_colour = function(self)
+        ease_colour(G.C.DYN_UI.MAIN, HEX('734933'))
+        ease_background_colour{new_colour = HEX('734933'), special_colour = G.C.BLACK, contrast = 2}
+    end,
 }
 
 SMODS.Booster {
@@ -1042,13 +1125,18 @@ SMODS.Booster {
     create_card = function(self, card)
         local key = G.P_TRADING[get_trading_key()]
         local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
-        _card.ability.trading = copy_table(key)
+        _card.force_trading = key.key
+        _card:set_ability(G.P_CENTERS['m_pc_trading'])
         _card:set_sprites(_card.config.center)
         local edition = poll_edition('trading_edition'..G.GAME.round_resets.ante, 1, true)
         _card:set_edition(edition)
         _card:set_seal(SMODS.poll_seal({mod = 3}))
         return _card
-    end
+    end,
+    ease_background_colour = function(self)
+        ease_colour(G.C.DYN_UI.MAIN, HEX('734933'))
+        ease_background_colour{new_colour = HEX('734933'), special_colour = G.C.BLACK, contrast = 2}
+    end,
 }
 
 SMODS.Booster {
@@ -1071,13 +1159,18 @@ SMODS.Booster {
     create_card = function(self, card)
         local key = G.P_TRADING[get_trading_key()]
         local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
-        _card.ability.trading = copy_table(key)
+        _card.force_trading = key.key
+        _card:set_ability(G.P_CENTERS['m_pc_trading'])
         _card:set_sprites(_card.config.center)
         local edition = poll_edition('trading_edition'..G.GAME.round_resets.ante, 1, true)
         _card:set_edition(edition)
         _card:set_seal(SMODS.poll_seal({mod = 3}))
         return _card
-    end
+    end,
+    ease_background_colour = function(self)
+        ease_colour(G.C.DYN_UI.MAIN, HEX('734933'))
+        ease_background_colour{new_colour = HEX('734933'), special_colour = G.C.BLACK, contrast = 2}
+    end,
 }
 
 SMODS.Booster {
@@ -1100,13 +1193,18 @@ SMODS.Booster {
     create_card = function(self, card)
         local key = G.P_TRADING[get_trading_key()]
         local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
-        _card.ability.trading = copy_table(key)
+        _card.force_trading = key.key
+        _card:set_ability(G.P_CENTERS['m_pc_trading'])
         _card:set_sprites(_card.config.center)
         local edition = poll_edition('trading_edition'..G.GAME.round_resets.ante, 1, true)
         _card:set_edition(edition)
         _card:set_seal(SMODS.poll_seal({mod = 3}))
         return _card
-    end
+    end,
+    ease_background_colour = function(self)
+        ease_colour(G.C.DYN_UI.MAIN, HEX('734933'))
+        ease_background_colour{new_colour = HEX('734933'), special_colour = G.C.BLACK, contrast = 2}
+    end,
 }
 
 SMODS.Shader {
@@ -1158,7 +1256,7 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
 )
 
 function get_trading_key()
-    rng_table = {}
+    local rng_table = {}
     for i, j in pairs(G.P_TRADING) do
         if (not j.in_pool or j:in_pool()) and (not pc_cross_mod_cards[i] or not pc_cross_mod_cards[i].in_pool or pc_cross_mod_cards[i].in_pool()) then
             if not j.is_joker then
@@ -1166,6 +1264,7 @@ function get_trading_key()
             end
         end
     end
+    table.sort(rng_table)
     local _, key = pseudorandom_element(rng_table, pseudoseed('trading'))
     return key
 end
@@ -1333,6 +1432,14 @@ SMODS.current_mod.set_debuff = function(card)
     if card.ability.temp_debuff then
         return true
     end
+end
+
+local old_playing_card_joker_effects = playing_card_joker_effects
+function playing_card_joker_effects(cards)
+    for i = 1, #G.playing_cards do
+        G.playing_cards[i]:calculate_exotic({playing_card_added = true, cards = cards, cardarea = G.playing_cards[i].area})
+    end
+    old_playing_card_joker_effects(cards)
 end
 
 local old_repitions = SMODS.calculate_repetitions
@@ -1503,12 +1610,51 @@ function SMODS.calculate_context(context, return_table)
     return old_calculate_context(context, return_table)
 end
 
+local pc_retrigger_colors = {
+    HEX("FF7B00"),
+    HEX("FF5C00"),
+    HEX("FF3E00"),
+    HEX("FF1F00"),
+    HEX("FF0000"),
+    HEX("FF3333"),
+    HEX("FF6666"),
+    HEX("FF9999"),
+    HEX("FFCCCC"),
+    HEX("FFFFFF"),
+}
+
 local old_calc_indiv = SMODS.calculate_individual_effect
 SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, from_edition)
-    local result = old_calc_indiv(effect, scored_card, key, amount, from_edition)
+    local result = nil
+    if ((key ~= 'message') and (key ~= 'func')) or not effect.cards then
+        result = old_calc_indiv(effect, scored_card, key, amount, from_edition)
+    end
     if (key == 'cards') and (#effect.cards >= 1) then
-        for k = #effect.cards - 1, 1, -1 do
-            card_eval_status_text(effect.cards[k], 'jokers', nil, nil, nil, effect)
+        local agains = 0
+        for k = #effect.cards, 1, -1 do
+            local m2 = {}
+            for l, m in pairs(effect) do
+                if l == 'cards' then
+                    m2.cards = {}
+                    for n = 1, #m do
+                        m2.cards[n] = m[n]
+                    end
+                else
+                    m2[l] = m
+                end
+            end
+            if agains > 0 then
+                if pc_retrigger_colors[agains] then
+                    m2.colour = pc_retrigger_colors[agains]
+                else
+                    m2.colour = pc_retrigger_colors[10]
+                end
+            end
+            for l = 1, agains do
+                m2.message = m2.message .. '!'
+            end
+            card_eval_status_text(m2.cards[k], 'jokers', nil, nil, nil, m2)
+            agains = agains + 1
         end
     end
     return result
