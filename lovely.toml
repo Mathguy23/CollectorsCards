@@ -805,3 +805,13 @@ payload = '''for i = 1, #G.playing_cards do
     G.playing_cards[i]:calculate_exotic({open_booster = true, card = self})
 end'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.CONTROLLER:recall_cardarea_focus('shop_jokers')'''
+position = 'after'
+payload = '''for i = 1, #G.playing_cards do
+    G.playing_cards[i]:calculate_exotic({shop_reroll = true, cost = reroll_cost})
+end'''
+match_indent = true
