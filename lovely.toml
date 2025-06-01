@@ -815,3 +815,13 @@ payload = '''for i = 1, #G.playing_cards do
     G.playing_cards[i]:calculate_exotic({shop_reroll = true, cost = reroll_cost})
 end'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.FUNCS.skip_booster = function(e)'''
+position = 'after'
+payload = '''for i = 1, #G.playing_cards do
+    G.playing_cards[i]:calculate_exotic({skipping_booster = true, card = e.config.ref_table})
+end'''
+match_indent = true
