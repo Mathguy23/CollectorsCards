@@ -412,7 +412,7 @@ pattern = '''if context.repetition_only then'''
 position = 'before'
 payload = '''local special_eval = nil
     if context.discard and (context.full_hand == G.hand.highlighted) and not context.no_trading then
-        special_eval = card:calculate_exotic({discard = true, full_hand = G.hand.highlighted, other_card = context.other_card}, {})
+        special_eval = card:calculate_exotic({discard = true, full_hand = G.hand.highlighted, other_card = context.other_card})
     end
     if special_eval and special_eval.remove then
         ret.remove = true
@@ -459,7 +459,7 @@ if not context.no_trading then
                 end
             end
         end
-        local exotic_eval = card:calculate_exotic({cardarea = context.cardarea, end_of_round = true, game_over = context.game_over})
+        local exotic_eval = card:calculate_exotic({cardarea = context.cardarea, end_of_round = true, game_over = context.game_over}, {})
         if exotic_eval then
             for l = 1, #exotic_eval do
                 table.insert(new_table, exotic_eval[l])
@@ -584,7 +584,7 @@ position = 'before'
 payload = '''phantom_cards = nil
 for i = 1, #G.hand.cards do
     if G.hand.cards[i].ability.trading and (G.hand.cards[i].ability.already_drawn ~= G.GAME.round) then
-        G.hand.cards[i]:calculate_exotic({drawn = G.hand, facing_blind = G.GAME.facing_blind}, {})
+        G.hand.cards[i]:calculate_exotic({drawn = G.hand, facing_blind = G.GAME.facing_blind})
     end
 end
 '''
