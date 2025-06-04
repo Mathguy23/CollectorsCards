@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.9c
+--- VERSION: 1.0.9d
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -235,12 +235,11 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                         if (context.does_score or context.is_suit or context.is_face or context.get_id or context.playing_card_main or context.playing_card_hand or context.repetition) then
                         elseif context.individual then
                             local m = reps[i]
-                            for j = 1, #reps[i].cards do
-                                table.insert(effects, {
-                                    extra = {focus = m.cards[j], colour = m.colour, message = m.message},
-                                    card = m.cards[j],
-                                })
-                            end
+                            table.insert(effects, {
+                                colour = m.colour,
+                                message = m.message,
+                                cards = m.cards,
+                            })
                         else
                             for j = 1, #reps[i].cards do
                                 local m = reps[i]
