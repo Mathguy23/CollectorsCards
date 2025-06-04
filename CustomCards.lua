@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.9b
+--- VERSION: 1.0.9c
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -232,7 +232,15 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
             if i ~= 1 then
                 if reps[i] then
                     if reps[i].cards then
-                        if (context.does_score or context.is_suit or context.is_face or context.get_id or context.individual or context.playing_card_main or context.playing_card_hand or context.repetition) then
+                        if (context.does_score or context.is_suit or context.is_face or context.get_id or context.playing_card_main or context.playing_card_hand or context.repetition) then
+                        elseif context.individual then
+                            local m = reps[i]
+                            for j = 1, #reps[i].cards do
+                                table.insert(effects, {
+                                    extra = {focus = m.cards[j], colour = m.colour, message = m.message},
+                                    card = m.cards[j],
+                                })
+                            end
                         else
                             for j = 1, #reps[i].cards do
                                 local m = reps[i]
@@ -825,7 +833,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     end
                 end
             end
-            if not context.does_score and not context.is_suit and not context.is_face and not context.get_id and not context.playing_card_main and not context.playing_card_hand and not context.individual then
+            if not context.does_score and not context.is_suit and not context.is_face and not context.get_id and not context.playing_card_main and not context.playing_card_hand then
                 if do_repeat and (next(effects) or can_retrigger) and (i == 1) then
                     local bans = {
                         this_card = false,
