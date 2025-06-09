@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.0.9e
+--- VERSION: 1.1.0
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -35,6 +35,59 @@ SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "decks.png", px
 SMODS.Atlas({ key = "booster", atlas_table = "ASSET_ATLAS", path = "boosters.png", px = 71, py = 95})
 
 SMODS.Atlas({ key = "tags", atlas_table = "ASSET_ATLAS", path = "tags.png", px = 34, py = 34})
+
+SMODS.Atlas({ key = "mini_planets", atlas_table = "ASSET_ATLAS", path = "mini_planets.png", px = 71, py = 95,
+    inject = function(self)
+        local file_path = type(self.path) == 'table' and
+            (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
+        if file_path == 'DEFAULT' then return end
+        -- language specific sprites override fully defined sprites only if that language is set
+        if self.language and not (G.SETTINGS.language == self.language) then return end
+        if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
+        self.full_path = (self.mod and self.mod.path or SMODS.path) ..
+            'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
+        local file_data = assert(NFS.newFileData(self.full_path),
+            ('Failed to collect file data for Atlas %s'):format(self.key))
+        self.image_data = assert(love.image.newImageData(file_data),
+            ('Failed to initialize image data for Atlas %s'):format(self.key))
+        self.image = love.graphics.newImage(self.image_data,
+            { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
+        G[self.atlas_table][self.key_noloc or self.key] = self
+        G['pc_mini_High Card'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 0,y = 0})
+        G['pc_mini_Pair'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 1,y = 0})
+        G['pc_mini_Two Pair'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 2,y = 0})
+        G['pc_mini_Three of a Kind'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 3,y = 0})
+        G['pc_mini_Straight'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 0,y = 1})
+        G['pc_mini_Flush'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 1,y = 1})
+        G['pc_mini_Full House'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 2,y = 1})
+        G['pc_mini_Four of a Kind'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 3,y = 1})
+        G['pc_mini_Straight Flush'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 0,y = 2})
+        G['pc_mini_Five of a Kind'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 1,y = 2})
+        G['pc_mini_Flush House'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 2,y = 2})
+        G['pc_mini_Flush Five'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 3,y = 2})
+    end
+})
+
+SMODS.Atlas({ key = "top10", atlas_table = "ASSET_ATLAS", path = "top10_.png", px = 71, py = 95,
+    inject = function(self)
+        local file_path = type(self.path) == 'table' and
+            (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
+        if file_path == 'DEFAULT' then return end
+        -- language specific sprites override fully defined sprites only if that language is set
+        if self.language and not (G.SETTINGS.language == self.language) then return end
+        if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
+        self.full_path = (self.mod and self.mod.path or SMODS.path) ..
+            'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
+        local file_data = assert(NFS.newFileData(self.full_path),
+            ('Failed to collect file data for Atlas %s'):format(self.key))
+        self.image_data = assert(love.image.newImageData(file_data),
+            ('Failed to initialize image data for Atlas %s'):format(self.key))
+        self.image = love.graphics.newImage(self.image_data,
+            { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
+        G[self.atlas_table][self.key_noloc or self.key] = self
+        G.pc_top10_indicator = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 0,y = 0})
+    end
+})
 
 SMODS.current_mod.custom_collection_tabs = function()
 	return { UIBox_button {
@@ -277,9 +330,18 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                             table.insert(effects, {
                                 dollars = config_thing.dollars,
                                 x_mult = config_thing.x_mult,
-                                card = context.other_card
+                                card = self,
+                                extra = {focus = context.other_card},
                             })
                         end
+                    elseif name == "7 of Luck" then
+                        if pseudorandom('pc_lucky') < G.GAME.probabilities.normal/config_thing.odds then
+                            table.insert(effects, {
+                                mult = config_thing.mult,
+                                card = self,
+                                extra = {focus = context.other_card},
+                            })
+                        end 
                     end
                 elseif self.area == G.hand then
 
@@ -290,7 +352,8 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                         if context.other_card:get_id() == 14 then
                             table.insert(effects, {
                                 chips = config_thing.h_chips,
-                                card = self
+                                card = self,
+                                extra = {focus = context.other_card},
                             })
                         end
                     end
@@ -483,6 +546,28 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                             }))
                         end
                     end}})
+                elseif name == "Full Circle" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
+                elseif name == "7 of Luck" then
+                    table.insert(effects, {
+                        chips = config_thing.chips,
+                        card = self
+                    })
+                elseif name == "Top 10" then
+                    local count = 0
+                    for i = 1, #context.full_hand do
+                        if context.full_hand[i].ability.pc_top10 then
+                            count = count + 1
+                        end
+                    end
+                    table.insert(effects, {
+                        mult = (count > 0) and (config_thing.mult * count),
+                        chips = config_thing.chips,
+                        card = self
+                    })
                 end
             elseif context.playing_card_hand then
                 if name == "Aluminum Plate" then
@@ -602,6 +687,26 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     if (context.destroying_card == self) and (context.cardarea == G.play) and (config_thing.scored >= config_thing.scores) then
                         return true
                     end
+                elseif name == "Full Circle" then
+                    if (context.destroying_card == self) and (context.cardarea == G.play) then
+                        local hand = context.scoring_name
+                        if not config_thing.saved[hand] then
+                            self:juice_up()
+                            config_thing.saved[hand] = true
+                            config_thing.count = config_thing.count + 1
+                            card_eval_status_text(self, 'jokers', nil, nil, nil, {message = tostring(config_thing.count), colour = G.C.FILTER})
+                        else
+                            local old_hand = G.GAME.current_round.current_hand.handname
+                            update_hand_text({sound = 'button', volume = 0.7, pitch = 0.8, delay = 0.3}, {handname=localize(hand, 'poker_hands'),chips = G.GAME.hands[hand].chips, mult = G.GAME.hands[hand].mult, level=G.GAME.hands[hand].level})
+                            level_up_hand(self, hand, nil, config_thing.count)
+                            if G.GAME.hands[old_hand] then
+                                update_hand_text({sound = 'button', volume = 0.7, pitch = 1.1, delay = 0}, {handname=localize(old_hand, 'poker_hands'),chips = G.GAME.hands[old_hand].chips, mult = G.GAME.hands[old_hand].mult, level=G.GAME.hands[old_hand].level})
+                            else
+                                update_hand_text({sound = 'button', volume = 0.7, pitch = 1.1, delay = 0}, {mult = 0, chips = 0, handname = '', level = ''})
+                            end
+                            return true
+                        end
+                    end
                 end
             elseif context.very_before then
                 if context.random_order then
@@ -631,6 +736,8 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     hand_is_free = true
                 end
             elseif context.after then
+                if context.cardarea == G.play then
+                end
             elseif context.drawn then
                 if context.drawn == G.hand then
                     if name == "Meteor" then
@@ -653,7 +760,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                             local pool = {}
                             for i, j in ipairs(G.hand.cards) do
                                 local card = G.hand.cards[i]
-                                if not card.edition and (card ~= self) then
+                                if (card ~= self) then
                                     table.insert(pool, card)
                                 end
                             end
@@ -745,6 +852,16 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     if ((context.is_suit == "Hearts") and next(find_joker('Smeared Joker'))) or ((context.is_suit == "Clubs") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Spades") or (context.is_suit == "Diamonds") then
                         return true
                     end
+                elseif name == "Five Fingers" then
+                    return true
+                elseif name == "Full Circle" then
+                    if ((context.is_suit == "Clubs") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Spades") then
+                        return true
+                    end
+                elseif name == "7 of Luck" then
+                    if ((context.is_suit == "Spades") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Clubs") then
+                        return true
+                    end
                 end
                 return false
             elseif context.is_face then
@@ -801,6 +918,14 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     return 13
                 elseif name == "Miscut" then
                     return 14
+                elseif name == "Five Fingers" then
+                    return 5
+                elseif name == "Full Circle" then
+                    return 9
+                elseif name == "7 of Luck" then
+                    return 7
+                elseif name == "Top 10" then
+                    return 10
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -832,6 +957,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     end
                 end
             end
+
             if not context.does_score and not context.is_suit and not context.is_face and not context.get_id and not context.playing_card_main and not context.playing_card_hand then
                 if do_repeat and (next(effects) or can_retrigger) and (i == 1) then
                     local bans = {
@@ -1080,6 +1206,43 @@ SMODS.Back {
     end
 }
 
+SMODS.Back {
+    key = 'Lavish',
+    loc_txt = {
+        name = "Lavish Deck",
+        text = {
+            "Start with {C:attention}2 Miscuts{}",
+            "and {C:attention}2 Pocket Aces{}",
+            "instead of {C:attention}Base Aces{}"
+        }
+    },
+    atlas = "decks",
+    pos = {x = 1, y = 0},
+    name = "Lavish Deck",
+    apply = function(self)
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                for i = #G.playing_cards, 1, -1 do
+                    if G.playing_cards[i]:get_id() == 14 then
+                        G.playing_cards[i]:remove()
+                    end
+                end
+                local keys = {'miscut', 'miscut', 'pocket_ace', 'pocket_ace'}
+                for i = 1, 4 do
+                    local key = G.P_TRADING[keys[i]]
+                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
+                    _card.force_trading = key.key
+                    _card:set_ability(G.P_CENTERS['m_pc_trading'])
+                    _card:set_sprites(_card.config.center)
+                    G.deck:emplace(_card)
+                    table.insert(G.playing_cards, _card)
+                end
+            return true
+            end
+        }))
+    end
+}
+
 SMODS.Booster {
     key = 'trading_normal_1',
     atlas = 'booster',
@@ -1276,6 +1439,67 @@ function get_trading_key()
     return key
 end
 
+function get_smods_rank_from_id(card)
+    local id = card:get_id()
+    if id > 0 then
+        for i, j in pairs(SMODS.Ranks) do
+            if j.id == id then
+                return j
+            end
+        end
+    else
+        return SMODS.Ranks[card.base.value] or {}
+    end
+end
+
+local function compare_cards_played(card1, card2)
+    if not card2.ability then
+        return true
+    end
+    if not card1.ability then
+        return false
+    end
+    if (card1.ability.pc_times_triggered or 0) == (card2.ability.pc_times_triggered or 0) then
+        local n1 = card1:get_nominal()
+        local n2 = card2:get_nominal()
+        return n1 >= n2
+    end
+    return (card1.ability.pc_times_triggered or 0) > (card2.ability.pc_times_triggered or 0)
+end
+
+function pc_redo_top10()
+    if not G.playing_cards or (G.STAGE ~= G.STAGES.RUN) then
+        return
+    end
+    local found_top10 = nil
+    local top10 = {}
+    for i = 1, #G.playing_cards do
+        if G.playing_cards[i].ability and G.playing_cards[i].ability.trading and( G.playing_cards[i].ability.trading.name == "Top 10") then
+            found_top10 = true
+        end
+        local index = 1
+        while top10[index] and not compare_cards_played(G.playing_cards[i], top10[index]) do
+            index = index + 1
+        end
+        if index ~= 11 then
+            top10[10] = nil
+            table.insert(top10, index, G.playing_cards[i])
+        end
+    end
+    for i = 1, #top10 do
+        top10[i].in_top10 = true
+    end
+    for i = 1, #G.playing_cards do
+        local sprites = (G.playing_cards[i].ability.pc_top10 ~= G.playing_cards[i].in_top10)
+        G.playing_cards[i].ability.pc_top10 = G.playing_cards[i].in_top10
+        if sprites then
+            G.playing_cards[i]:set_sprites(G.playing_cards[i].config.center, G.playing_cards[i].config.card)
+        end
+        G.playing_cards[i].in_top10 = nil
+    end
+    G.GAME.pc_show_top10 = found_top10
+end
+
 G.FUNCS.up_rank = function(e)
     e.config.ref_table.ability.trading.config.rank = (e.config.ref_table.ability.trading.config.rank or 1) + 1
     if e.config.ref_table.ability.trading.config.rank == 15 then
@@ -1400,7 +1624,11 @@ function Card:set_sprites(_center, _front)
     if _center and self.ability and self.ability.trading and self.ability.trading.atlas then 
         if _center.set then
             if self.children.center then
-                self.children.center.atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or self.ability.trading.atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading']
+                if self.ability.trading.atlas and G.ASSET_ATLAS[self.ability.trading.atlas .. '_hc'] then
+                    self.children.center.atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or (self.ability.trading.atlas .. '_hc')) or self.ability.trading.atlas or 'pc_trading']
+                else
+                    self.children.center.atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or self.ability.trading.atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading']
+                end
                 self.children.center:set_sprite_pos(self.ability.trading.pos)
             else
                 self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[G.SETTINGS.colourblind_option and (self.ability.trading.hc_atlas or self.ability.trading.atlas or 'pc_trading_hc') or self.ability.trading.atlas or 'pc_trading'], self.ability.trading.pos)
@@ -1433,6 +1661,35 @@ function Card:set_sprites(_center, _front)
             self.children.back:set_role({major = self, role_type = 'Glued', draw_major = self})
         end
     end
+end
+
+local old_remove = Card.remove
+function Card:remove()
+    local result = old_remove(self)
+    pc_redo_top10()
+    return result
+end
+
+local old_set_base = Card.set_base
+function Card:set_base(card, initial)
+    local result = old_set_base(self, card, initial)
+    if initial then
+        pc_redo_top10()
+    end
+    return result
+end
+
+local old_copy_card = copy_card
+function copy_card(other, new_card, card_scale, playing_card, strip_edition)
+    local result = old_copy_card(other, new_card, card_scale, playing_card, strip_edition)
+    G.E_MANAGER:add_event(Event({
+        trigger = 'immediate',
+        func = (function()
+            pc_redo_top10()
+            return true
+        end)
+    }))
+    return result
 end
 
 SMODS.current_mod.set_debuff = function(card)
@@ -1665,6 +1922,50 @@ SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, f
         end
     end
     return result
+end
+
+local old_seal = SMODS.DrawSteps['seal'].func
+SMODS.DrawSteps['seal'].func = function(self, layer)
+    old_seal(self, layer)
+    if self.ability and self.ability.trading and (self.ability.trading.name == "Full Circle") and self.ability.trading.config and self.ability.trading.config.saved then
+        for i, j in pairs(self.ability.trading.config.saved) do
+            if G['pc_mini_' .. i] then
+                G['pc_mini_' .. i].role.draw_major = self
+                G['pc_mini_' .. i]:draw_shader('dissolve', nil, nil, nil, self.children.center)
+            end
+        end
+    end
+    if G and G.GAME and G.GAME.pc_show_top10 and self.ability and self.ability.pc_top10 then
+        G.pc_top10_indicator.role.draw_major = self
+        G.pc_top10_indicator:draw_shader('dissolve', nil, nil, nil, self.children.center)
+    end
+end
+
+local old_poker_info = G.FUNCS.get_poker_hand_info
+function G.FUNCS.get_poker_hand_info(_cards)
+    local text, loc_disp_text, poker_hands, scoring_hand, disp_text = old_poker_info(_cards)
+    for i = 1, #_cards do
+        if _cards[i].ability and _cards[i].ability.trading and (_cards[i].ability.trading.name == "Five Fingers") and (#_cards == 5) then
+            text = G.GAME.pc_most_played_poker_hand or "High Card"
+            break
+        end
+    end
+    disp_text = text
+    local _hand = SMODS.PokerHands[text]
+    if text == 'Straight Flush' then
+		local royal = true
+		for j = 1, #scoring_hand do
+			local rank = SMODS.Ranks[scoring_hand[j].base.value]
+			royal = royal and (rank.key == 'Ace' or rank.key == '10' or rank.face)
+		end
+		if royal then
+			disp_text = 'Royal Flush'
+		end
+	elseif _hand and _hand.modify_display_text and type(_hand.modify_display_text) == 'function' then
+		disp_text = _hand:modify_display_text(_cards, scoring_hand) or disp_text
+	end
+    loc_disp_text = localize(disp_text, 'poker_hands')
+    return text, loc_disp_text, poker_hands, scoring_hand, disp_text
 end
 
 table.insert(SMODS.calculation_keys, 'cards')

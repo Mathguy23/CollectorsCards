@@ -83,6 +83,14 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
         loc_vars = {localize("Clubs", 'suits_plural'), config_thing.chips, config_thing.x_mult}
     elseif specific_vars.collect.name == "Miscut" then
         loc_vars = {localize("Diamonds", 'suits_plural'), localize("Spades", 'suits_plural'), config_thing.chips}
+    elseif specific_vars.collect.name == "Five Fingers" then
+        loc_vars = {G.GAME.pc_most_played_poker_hand or "High Card"}
+    elseif specific_vars.collect.name == "Full Circle" then
+        loc_vars = {config_thing.chips, config_thing.count}
+    elseif specific_vars.collect.name == "7 of Luck" then
+        loc_vars = { config_thing.chips, G.GAME.probabilities.normal, config_thing.odds, config_thing.mult}
+    elseif specific_vars.collect.name == "Top 10" then
+        loc_vars = {config_thing.chips, config_thing.mult}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -123,9 +131,13 @@ payload = '''self.P_TRADING = {
     aluminum_plate = {order = 22, key = 'aluminum_plate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Aluminum Plate", pos = {x=0,y=5}, set = "CustomCard", config = {h_x_mult = 2}, base = "S_8"},
     fortune_orb = {order = 23, key = 'fortune_orb', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Fortune Orb", pos = {x=1,y=5}, set = "CustomCard", config = {cards = 2}, base = "S_Q"},
     bust_card = {order = 24, key = 'bust_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Bust Card", pos = {x=2,y=5}, set = "CustomCard", config = {mult = 22, cards = 2}, base = "H_2"},
-    old_bell = {order = 25, key = 'old_bell', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Old Bell", pos = {x=3,y=5}, set = "CustomCard", config = {chips = 10, x_mult = 3}, base = "C_K"},
+    old_bell = {order = 25, key = 'old_bell', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Old Bell", pos = {x=3,y=5}, set = "CustomCard", config = {chips = 10, x_mult = 2}, base = "C_K"},
     miscut = {order = 26, key = 'miscut', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Miscut", pos = {x=4,y=5}, set = "CustomCard", config = {chips = 11}, base = "S_A"},
     free_pass = {order = 27, key = 'free_pass', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Free Pass", pos = {x=0,y=6}, set = "CustomCard", config = {}, base = "H_5"},
+    five_fingers = {order = 28, key = 'five_fingers', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Five Fingers", pos = {x=1,y=6}, set = "CustomCard", config = {}, base = "D_5"},
+    full_circle = {order = 29, key = 'full_circle', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Full Circle", pos = {x=2,y=6}, set = "CustomCard", config = {chips = 9, count = 0, saved = {}}, base = "S_9"},
+    seven_luck = {order = 30, key = 'seven_luck', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "7 of Luck", pos = {x=3,y=6}, set = "CustomCard", config = {chips = 7, mult = 20, odds = 7}, base = "C_7"},
+    top_ten = {order = 31, key = 'top_ten', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Top 10", pos = {x=4,y=6}, set = "CustomCard", config = {chips = 10, mult = 5}, base = "S_T"},
  }'''
 match_indent = true
 
@@ -297,7 +309,7 @@ pattern = '''local cards_destroyed = {}'''
 position = 'after'
 payload = '''for i = 1, #scoring_hand do
     for j = 1, #scoring_hand do
-        if scoring_hand[j]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards, cardarea = G.play}) == true then 
+        if scoring_hand[j]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards, cardarea = G.play, scoring_name = text}) == true then 
             if SMODS.shatters(scoring_hand[i]) then
                 scoring_hand[i].shattered = true
             else
@@ -307,7 +319,7 @@ payload = '''for i = 1, #scoring_hand do
         end
     end
     for j = 1, #G.hand.cards do
-        if G.hand.cards[j]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards, cardarea = G.hand}) == true then 
+        if G.hand.cards[j]:calculate_exotic({destroying_card = scoring_hand[i], full_hand = G.play.cards, cardarea = G.hand, scoring_name = text}) == true then 
             if SMODS.shatters(scoring_hand[i]) then
                 scoring_hand[i].shattered = true
             else
@@ -361,6 +373,14 @@ position = 'after'
 payload = '''G.E_MANAGER:add_event(Event({
     trigger = 'immediate',
         func = function()
+            for k=1, #G.play.cards do
+                if not G.play.cards[k].ability.pc_times_triggered then
+                    G.play.cards[k].ability.pc_times_triggered = 1
+                else
+                    G.play.cards[k].ability.pc_times_triggered = G.play.cards[k].ability.pc_times_triggered + 1
+                end
+            end
+            pc_redo_top10()
             local pool = {}
             for k=1, #G.play.cards do
                 table.insert(pool, G.play.cards[k])
@@ -700,7 +720,7 @@ match_indent = true
 target = 'cardarea.lua'
 pattern = '''if v.ability.forced_selection and not self.highlighted[1] then'''
 position = 'before'
-payload = '''if v.ability.trading and (v.ability.trading.name == "Old Bell") and not v.highlighted and not v.debuff and not (v.ability.forced_selection and not self.highlighted[1]) then
+payload = '''if v.ability.trading and (v.ability.trading.name == "Old Bell") and not v.highlighted and not v.debuff and not (v.ability.forced_selection and not self.highlighted[1]) and G.STATE == G.STATES.SELECTING_HAND then
     self:add_to_highlighted(v)
     if v.highlighted then
         v.ability.forced_selection = true
@@ -824,4 +844,19 @@ position = 'after'
 payload = '''for i = 1, #G.playing_cards do
     G.playing_cards[i]:calculate_exotic({skipping_booster = true, card = e.config.ref_table})
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.GAME.hands[text].visible = true'''
+position = 'before'
+payload = '''local _handname, _played, _order = 'High Card', -1, 100
+for k, v in pairs(G.GAME.hands) do
+    if v.played > _played or (v.played == _played and _order > v.order) then 
+        _played = v.played
+        _handname = k
+    end
+end
+G.GAME.pc_most_played_poker_hand = _handname'''
 match_indent = true

@@ -136,6 +136,26 @@ return {
                     "Free Pass",
                 },
             },
+            five_fingers = {
+                text = {
+                    "Five Fingers",
+                },
+            },
+            full_circle = {
+                text = {
+                    "Full Circle",
+                },
+            },
+            seven_luck = {
+                text = {
+                    "7 of {C:green}Luck{}",
+                },
+            },
+            top_ten = {
+                text = {
+                    "Top 10",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -345,8 +365,8 @@ return {
             old_bell = {
                 text = {
                     "{C:attention}King{}, {C:clubs}#1#{}, {C:attention}Face Card{}, {C:blue}+#2#{} Chips",
-                    "{X:mult,C:white} X#3# {} Mult. On {C:attention}Draw{},",
-                    "forced to be {C:attention}selected{}",
+                    "{X:mult,C:white} X#3# {} Mult. On {C:attention}Draw{} during a",
+                    "{C:attention}blind{}, forced to be {C:attention}selected{}",
                 },
             },
             miscut = {
@@ -358,11 +378,47 @@ return {
             },
             free_pass = {
                 text = {
-                    "{C:attention}Always scores{}",
+                    "{C:attention}Always Scores{}",
                     "If {C:attention}played{}, this hand",
                     "costs no {C:blue}Hands{}"
                 }
-            }
+            },
+            five_fingers = {
+                text = {
+                    "{C:attention}5{}, {C:dark_edition}All Suits{}",
+                    "If exactly {C:attention}5{} cards",
+                    "in hand, hand is your",
+                    "{C:attention}most played hand{}",
+                    "{C:inactive}(Currently {C:attention}#1#{C:inactive})"
+                }
+            },
+            full_circle = {
+                text = {
+                    "{C:attention}9{}, {C:spades}Spades{}, {C:blue}+#1#{} Chips",
+                    "After {C:attention}Play{}, {C:attention}save{} played hand",
+                    "type. If a hand is {C:attention}resaved{},",
+                    "{C:attention}upgrade{} it once for {C:attention}each{} saved",
+                    "hand then {S:1.1,C:red,E:2}self destruct{}",
+                    "{C:attention}#2#{C:inactive} hands saved!",
+                    "{C:inactive}(Must score to activate)"
+                }
+            },
+            seven_luck = {
+                text = {
+                    "{C:attention}7{}, {C:clubs}Clubs{}, {C:blue}+#1#{} Chips",
+                    "Scored cards have a",
+                    "{C:green}#2# in #3#{} chance to give",
+                    "{C:red}+#4#{} Mult"
+                },
+            },
+            top_ten = {
+                text = {
+                    "{C:attention}10{}, {C:blue}+#1#{} Chips",
+                    "Gives {C:red}+#2#{} Mult for each",
+                    "{C:money}Top 10 Most Played Cards{}",
+                    "in {C:attention}played{} hand"
+                },
+            },
         },
         Tarot = {
             c_pc_exchange = {
