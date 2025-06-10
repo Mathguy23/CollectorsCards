@@ -430,6 +430,17 @@ return {
                 }
             }
         },
+        Spectral = {
+            c_pc_barter = {
+                name = "Barter",
+                text = {
+                    "Destroy {C:attention}1{} random",
+                    "card in your hand, add",
+                    "{C:attention}#1#{} random {C:attention}Trading",
+                    "{C:attention}cards{} to your hand"
+                }
+            }
+        },
         Enhanced = {
             m_pc_trading = {
                 name = 'Trading Card',

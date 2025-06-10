@@ -860,3 +860,52 @@ for k, v in pairs(G.GAME.hands) do
 end
 G.GAME.pc_most_played_poker_hand = _handname'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''if not G.GAME.current_round.used_packs[i] then'''
+position = 'before'
+payload = '''if not G.GAME.current_round.used_packs[1] then
+    if G.GAME.force_mega_trading then
+        G.GAME.current_round.used_packs[1] = 'p_pc_trading_mega_1'
+    end
+    if not G.GAME.current_round.used_packs[1] then
+        G.GAME.current_round.used_packs[1] = get_pack('shop_pack').key
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''create_shop_card_ui(card, 'Booster', G.shop_booster)'''
+position = 'before'
+payload = '''if G.GAME.force_mega_trading then
+    card.ability.pc_free = true
+    G.GAME.force_mega_trading = nil
+    card:set_cost()
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.deck:shuffle('cashout'..G.GAME.round_resets.ante)'''
+position = 'before'
+payload = '''if (G.GAME.selected_back.name == "Enthusiast Deck") and (G.GAME.blind_on_deck == "Boss") then
+    G.GAME.force_mega_trading = true
+else
+    G.GAME.force_mega_trading = nil
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''self.cost = math.max(1, math.floor((self.base_cost + self.extra_cost + 0.5)*(100-G.GAME.discount_percent)/100))'''
+position = 'after'
+payload = '''if self.ability.pc_free then
+    self.cost = 0
+end'''
+match_indent = true

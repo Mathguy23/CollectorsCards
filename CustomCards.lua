@@ -342,6 +342,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                                 extra = {focus = context.other_card},
                             })
                         end 
+                        can_retrigger = true
                     end
                 elseif self.area == G.hand then
 
@@ -511,10 +512,13 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     table.insert(effects, {extra = {func = function()
                         for j = 1, #G.hand.cards do
                             local percent = 1.15 - (j-0.999)/(#G.hand.cards-0.998)*0.3
+                            local card = G.hand.cards[j]
                             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15, func = function()
-                                G.hand.cards[j]:flip()
-                                play_sound('card1', percent)
-                                G.hand.cards[j]:juice_up(0.3, 0.3)
+                                if not card.removed then
+                                    G.hand.cards[j]:flip()
+                                    play_sound('card1', percent)
+                                    G.hand.cards[j]:juice_up(0.3, 0.3)
+                                end
                                 return true
                             end
                             }))
@@ -523,11 +527,14 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     table.insert(effects, {extra = {func = function()
                         for j = 1, #G.hand.cards do
                             local coinflip = pseudorandom('misc')
+                            local card = G.hand.cards[j]
                             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15, func = function()
-                                if coinflip < 0.5 then
-                                    SMODS.modify_rank(G.hand.cards[j], -1)
-                                else
-                                    SMODS.modify_rank(G.hand.cards[j], 1)
+                                if not card.removed then
+                                    if coinflip < 0.5 then
+                                        SMODS.modify_rank(G.hand.cards[j], -1)
+                                    else
+                                        SMODS.modify_rank(G.hand.cards[j], 1)
+                                    end
                                 end
                                 return true
                             end
@@ -537,10 +544,13 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     table.insert(effects, {extra = {func = function()
                         for j = 1, #G.hand.cards do
                             local percent = 1.15 - (j-0.999)/(#G.hand.cards-0.998)*0.3
+                            local card = G.hand.cards[j]
                             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15, func = function()
-                                G.hand.cards[j]:flip()
-                                play_sound('card1', percent, 0.6)
-                                G.hand.cards[j]:juice_up(0.3, 0.3)
+                                if not card.removed then
+                                    G.hand.cards[j]:flip()
+                                    play_sound('card1', percent, 0.6)
+                                    G.hand.cards[j]:juice_up(0.3, 0.3)
+                                end
                                 return true
                             end
                             }))
@@ -1142,6 +1152,59 @@ SMODS.Tarot {
     end
 }
 
+SMODS.Spectral {
+    key = 'barter',
+    atlas = "tarots",
+    pos = {x = 1, y = 0},
+    config = {extra = 3},
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
+        local destroyed_cards = {}
+        destroyed_cards[#destroyed_cards+1] = pseudorandom_element(G.hand.cards, pseudoseed('random_destroy'))
+        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+            play_sound('tarot1')
+            used_tarot:juice_up(0.3, 0.5)
+            return true end }))
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.1,
+            func = function() 
+                for i=#destroyed_cards, 1, -1 do
+                    local card = destroyed_cards[i]
+                    if SMODS.shatters(card) then
+                        card:shatter()
+                    else
+                        card:start_dissolve(nil, i ~= #destroyed_cards)
+                    end
+                end
+                return true end }))
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.7,
+            func = function() 
+                local cards = {}
+                for i=1, card.ability.extra do
+                    local key = G.P_TRADING[get_trading_key()]
+                    local _card = Card(G.hand.T.x, G.hand.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
+                    _card.force_trading = key.key
+                    _card:set_ability(G.P_CENTERS['m_pc_trading'])
+                    _card:set_sprites(_card.config.center)
+                    G.hand:emplace(_card)
+                    table.insert(G.playing_cards, _card)
+                    _card:start_materialize({G.C.SECONDARY_SET.Spectral})
+                    cards[i] = _card
+                end
+                playing_card_joker_effects(cards)
+        return true end }))
+    end,
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card and card.ability.extra or 3} }
+    end,
+    can_use = function()
+        return (#G.hand.cards > 1)
+    end
+}
+
 SMODS.Tag {
     key = 'print',
     atlas = 'tags',
@@ -1241,6 +1304,22 @@ SMODS.Back {
             end
         }))
     end
+}
+
+SMODS.Back {
+    key = 'Enthusiast',
+    loc_txt = {
+        name = "Enthusiast Deck",
+        text = {
+            "Each {C:attention}Shop{} after a",
+            "{C:attention}Boss Blind{} has a {C:attention}free{}",
+            "{C:attention}Mega Trading Pack{}",
+            "{s:0.8,C:inactive}Suggested by Lexi"
+        }
+    },
+    atlas = "decks",
+    pos = {x = 2, y = 0},
+    name = "Enthusiast Deck",
 }
 
 SMODS.Booster {
@@ -1709,6 +1788,7 @@ end
 local old_repitions = SMODS.calculate_repetitions
 SMODS.calculate_repetitions = function(card, context, reps)
     local reps = old_repitions(card, context, reps)
+    reps = reps or {1}
     if context.scoring_hand then
         for l=1, #context.scoring_hand do
             local eval = context.scoring_hand[l]:calculate_exotic({cardarea = context.cardarea, other_card = card, repetition = true, full_hand = G.play.cards, scoring_hand = context.scoring_hand, scoring_name = context.scoring_name, poker_hands = context.poker_hands, end_of_round = context.end_of_round}, {})
@@ -1945,7 +2025,7 @@ local old_poker_info = G.FUNCS.get_poker_hand_info
 function G.FUNCS.get_poker_hand_info(_cards)
     local text, loc_disp_text, poker_hands, scoring_hand, disp_text = old_poker_info(_cards)
     for i = 1, #_cards do
-        if _cards[i].ability and _cards[i].ability.trading and (_cards[i].ability.trading.name == "Five Fingers") and (#_cards == 5) then
+        if _cards[i].ability and _cards[i].ability.trading and (_cards[i].ability.trading.name == "Five Fingers") and (#_cards == 5) and not _cards[i].debuff then
             text = G.GAME.pc_most_played_poker_hand or "High Card"
             break
         end
