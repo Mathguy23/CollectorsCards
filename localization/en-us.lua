@@ -156,6 +156,11 @@ return {
                     "Top 10",
                 },
             },
+            crazy_eight = {
+                text = {
+                    "Crazy Eight",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -419,6 +424,16 @@ return {
                     "in {C:attention}played{} hand"
                 },
             },
+            crazy_eight = {
+                text = {
+                    "{C:attention}8{}, {C:red}+#1#{} Mult,",
+                    "{C:dark_edition}All Suits{}, {C:green}Undebuffable{}",
+                    "On {C:attention}Play{}, {C:attention}other{} cards are",
+                    "converted into {C:attention}Wild Cards{}",
+                    "and {C:attention}prevented{} from being",
+                    "{C:red}debuffed{} this round"
+                },
+            },
         },
         Tarot = {
             c_pc_exchange = {
@@ -465,6 +480,9 @@ return {
             b_down = "-",
             k_perfect_gold = "Golden!",
             k_bust = "Bust!",
+            k_shabby = "Shabby",
+            k_basic = "Basic",
+            k_mint = "Mint",
         },
         v_dictionary = {
             a_discards = "+#1# Discard",

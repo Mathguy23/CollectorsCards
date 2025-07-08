@@ -91,6 +91,9 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
         loc_vars = { config_thing.chips, G.GAME.probabilities.normal, config_thing.odds, config_thing.mult}
     elseif specific_vars.collect.name == "Top 10" then
         loc_vars = {config_thing.chips, config_thing.mult}
+    elseif specific_vars.collect.name == "Crazy Eight" then
+        info_queue[#info_queue + 1] = G.P_CENTERS['m_wild']
+        loc_vars = {config_thing.mult}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -107,38 +110,39 @@ target = 'game.lua'
 pattern = '''self.P_LOCKED = {}'''
 position = 'after'
 payload = '''self.P_TRADING = {
-    flint_card = {order = 1, key = 'flint_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Flint Card", pos = {x=1,y=0}, set = "CustomCard", config = {mult = 8}, base = "H_A"},
-    scholar_mate = {order = 2, key = 'scholar_mate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Scholar's Mate", pos = {x=3,y=0}, set = "CustomCard", config = {chips = 10, mult = 12}, base = "S_Q"},
-    scandinavian_defense = {order = 3, key = 'scandinavian_defense', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Scandinavian Defense", pos = {x=2,y=0}, set = "CustomCard", config = {chips = 10, mult = 12}, base = "S_Q"},
-    double_up = {order = 4, key = 'double_up', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Up", pos = {x=3,y=1}, set = "CustomCard", config = {retriggers = 1}, base = "S_Q"},
-    eye_card = {order = 5, key = 'eye_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Eye Card", pos = {x=4,y=1}, set = "CustomCard", config = {chips = 60}, base = "C_A"},
-    playable_joker = {order = 6, key = 'playable_joker', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Playable Joker", pos = {x=0,y=0}, set = "CustomCard", config = {odds = 4}, base = "S_2"},
-    sunflower = {order = 7, key = 'sunflower', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Sunflower", pos = {x=0,y=2}, set = "CustomCard", config = {chips = 8, gain = 6}, base = "D_8"},
-    rules_card = {order = 8, key = 'rules_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Rules Card", pos = {x=1,y=2}, set = "CustomCard", config = {discards = 1}, base = "S_A"},
-    wild_draw_4 = {order = 9, key = 'wild_draw_4', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Wild Draw 4", pos = {x=2,y=2}, set = "CustomCard", config = {chips = 4, cards = 4}, base = "C_4"},
-    jack_in_a_box = {order = 10, key = 'jack_in_a_box', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Jack in a Box", pos = {x=3,y=2}, set = "CustomCard", config = {chips = 10, scores = 3, scored = 0}, base = "C_J"},
-    tombstone = {order = 11, key = 'tombstone', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "2mbstone", pos = {x=4,y=2}, set = "CustomCard", config = {chips = 2, odds = 3}, base = "S_2"},
-    mane_6 = {order = 12, key = 'mane_6', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Mane 6", pos = {x=0,y=3}, set = "CustomCard", config = {chips = 6, x_mult = 0.2}, base = "H_6"},
-    blank_card = {order = 13, key = 'blank_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Blank Card", pos = {x=1,y=3}, set = "CustomCard", config = {}, base = "H_A"},
-    colon_3 = {order = 14, key = 'colon_3', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = ":3", pos = {x=2,y=3}, set = "CustomCard", config = {chips = 3, scores = 33, scored = 0}, base = "D_3"},
-    golden_ratio = {order = 15, key = 'golden_ratio', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Golden Ratio", pos = {x=3,y=3}, set = "CustomCard", config = {dollars = 1, x_mult = 1.618}, base = "D_2"},
-    double_down = {order = 16, key = 'double_down', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Down", pos = {x=4,y=3}, set = "CustomCard", config = {}, base = "H_Q"},
-    pocket_ace = {order = 17, key = 'pocket_ace', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Pocket Ace", pos = {x=0,y=4}, set = "CustomCard", config = {h_chips = 30}, base = "S_A"},
-    haunted_card = {order = 18, key = 'haunted_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Haunted Card", pos = {x=1,y=4}, set = "CustomCard", config = {cards = 4}, base = "S_3"},
-    executor = {order = 19, key = 'executor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Executor", pos = {x=2,y=4}, set = "CustomCard", config = {chips = 3, destroys = 3, destroyed = 0}, base = "C_3"},
-    monarch = {order = 20, key = 'monarch', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Monarch", pos = {x=3,y=4}, set = "CustomCard", config = {chips = 50}, base = "S_K"},
-    meteor = {order = 21, key = 'meteor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Meteor", pos = {x=4,y=4}, set = "CustomCard", config = {chips = 50, cards = 2}, base = "D_A"},
-    aluminum_plate = {order = 22, key = 'aluminum_plate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Aluminum Plate", pos = {x=0,y=5}, set = "CustomCard", config = {h_x_mult = 2}, base = "S_8"},
-    fortune_orb = {order = 23, key = 'fortune_orb', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Fortune Orb", pos = {x=1,y=5}, set = "CustomCard", config = {cards = 2}, base = "S_Q"},
-    bust_card = {order = 24, key = 'bust_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Bust Card", pos = {x=2,y=5}, set = "CustomCard", config = {mult = 22, cards = 2}, base = "H_2"},
-    old_bell = {order = 25, key = 'old_bell', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Old Bell", pos = {x=3,y=5}, set = "CustomCard", config = {chips = 10, x_mult = 2}, base = "C_K"},
-    miscut = {order = 26, key = 'miscut', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Miscut", pos = {x=4,y=5}, set = "CustomCard", config = {chips = 11}, base = "S_A"},
-    free_pass = {order = 27, key = 'free_pass', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Free Pass", pos = {x=0,y=6}, set = "CustomCard", config = {}, base = "H_5"},
-    five_fingers = {order = 28, key = 'five_fingers', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Five Fingers", pos = {x=1,y=6}, set = "CustomCard", config = {}, base = "D_5"},
-    full_circle = {order = 29, key = 'full_circle', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Full Circle", pos = {x=2,y=6}, set = "CustomCard", config = {chips = 9, count = 0, saved = {}}, base = "S_9"},
-    seven_luck = {order = 30, key = 'seven_luck', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "7 of Luck", pos = {x=3,y=6}, set = "CustomCard", config = {chips = 7, mult = 20, odds = 7}, base = "C_7"},
-    top_ten = {order = 31, key = 'top_ten', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Top 10", pos = {x=4,y=6}, set = "CustomCard", config = {chips = 10, mult = 5}, base = "S_T"},
- }'''
+    flint_card = {order = 1, key = 'flint_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Flint Card", pos = {x=1,y=0}, set = "CustomCard", config = {mult = 8}, base = "H_A", rarity = 1},
+    scholar_mate = {order = 2, key = 'scholar_mate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Scholar's Mate", pos = {x=3,y=0}, set = "CustomCard", config = {chips = 10, mult = 12}, base = "S_Q", rarity = 1},
+    scandinavian_defense = {order = 3, key = 'scandinavian_defense', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Scandinavian Defense", pos = {x=2,y=0}, set = "CustomCard", config = {chips = 10, mult = 12}, base = "S_Q", rarity = 1},
+    double_up = {order = 4, key = 'double_up', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Up", pos = {x=3,y=1}, set = "CustomCard", config = {retriggers = 1}, base = "S_Q", rarity = 2},
+    eye_card = {order = 5, key = 'eye_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Eye Card", pos = {x=4,y=1}, set = "CustomCard", config = {chips = 60}, base = "C_A", rarity = 1},
+    playable_joker = {order = 6, key = 'playable_joker', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Playable Joker", pos = {x=0,y=0}, set = "CustomCard", config = {odds = 4}, base = "S_2", rarity = 2},
+    sunflower = {order = 7, key = 'sunflower', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Sunflower", pos = {x=0,y=2}, set = "CustomCard", config = {chips = 8, gain = 6}, base = "D_8", rarity = 1},
+    rules_card = {order = 8, key = 'rules_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Rules Card", pos = {x=1,y=2}, set = "CustomCard", config = {discards = 1}, base = "S_A", rarity = 2},
+    wild_draw_4 = {order = 9, key = 'wild_draw_4', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Wild Draw 4", pos = {x=2,y=2}, set = "CustomCard", config = {chips = 4, cards = 4}, base = "C_4", rarity = 1},
+    jack_in_a_box = {order = 10, key = 'jack_in_a_box', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Jack in a Box", pos = {x=3,y=2}, set = "CustomCard", config = {chips = 10, scores = 3, scored = 0}, base = "C_J", rarity = 2},
+    tombstone = {order = 11, key = 'tombstone', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "2mbstone", pos = {x=4,y=2}, set = "CustomCard", config = {chips = 2, odds = 3}, base = "S_2", rarity = 3},
+    mane_6 = {order = 12, key = 'mane_6', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Mane 6", pos = {x=0,y=3}, set = "CustomCard", config = {chips = 6, x_mult = 0.2}, base = "H_6", rarity = 2},
+    blank_card = {order = 13, key = 'blank_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Blank Card", pos = {x=1,y=3}, set = "CustomCard", config = {}, base = "H_A", rarity = 1},
+    colon_3 = {order = 14, key = 'colon_3', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = ":3", pos = {x=2,y=3}, set = "CustomCard", config = {chips = 3, scores = 33, scored = 0}, base = "D_3", rarity = 2},
+    golden_ratio = {order = 15, key = 'golden_ratio', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Golden Ratio", pos = {x=3,y=3}, set = "CustomCard", config = {dollars = 1, x_mult = 1.618}, base = "D_2", rarity = 2},
+    double_down = {order = 16, key = 'double_down', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Double Down", pos = {x=4,y=3}, set = "CustomCard", config = {}, base = "H_Q", rarity = 2},
+    pocket_ace = {order = 17, key = 'pocket_ace', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Pocket Ace", pos = {x=0,y=4}, set = "CustomCard", config = {h_chips = 30}, base = "S_A", rarity = 2},
+    haunted_card = {order = 18, key = 'haunted_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Haunted Card", pos = {x=1,y=4}, set = "CustomCard", config = {cards = 4}, base = "S_3", rarity = 1},
+    executor = {order = 19, key = 'executor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Executor", pos = {x=2,y=4}, set = "CustomCard", config = {chips = 3, destroys = 3, destroyed = 0}, base = "C_3", rarity = 3},
+    monarch = {order = 20, key = 'monarch', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Monarch", pos = {x=3,y=4}, set = "CustomCard", config = {chips = 50}, base = "S_K", rarity = 1},
+    meteor = {order = 21, key = 'meteor', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Meteor", pos = {x=4,y=4}, set = "CustomCard", config = {chips = 50, cards = 2}, base = "D_A", rarity = 2},
+    aluminum_plate = {order = 22, key = 'aluminum_plate', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Aluminum Plate", pos = {x=0,y=5}, set = "CustomCard", config = {h_x_mult = 2}, base = "S_8", rarity = 2},
+    fortune_orb = {order = 23, key = 'fortune_orb', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Fortune Orb", pos = {x=1,y=5}, set = "CustomCard", config = {cards = 2}, base = "S_Q", rarity = 1},
+    bust_card = {order = 24, key = 'bust_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Bust Card", pos = {x=2,y=5}, set = "CustomCard", config = {mult = 22, cards = 2}, base = "H_2", rarity = 2},
+    old_bell = {order = 25, key = 'old_bell', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Old Bell", pos = {x=3,y=5}, set = "CustomCard", config = {chips = 10, x_mult = 2}, base = "C_K", rarity = 3},
+    miscut = {order = 26, key = 'miscut', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Miscut", pos = {x=4,y=5}, set = "CustomCard", config = {chips = 11}, base = "S_A", rarity = 1},
+    free_pass = {order = 27, key = 'free_pass', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Free Pass", pos = {x=0,y=6}, set = "CustomCard", config = {}, base = "H_5", rarity = 2},
+    five_fingers = {order = 28, key = 'five_fingers', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Five Fingers", pos = {x=1,y=6}, set = "CustomCard", config = {}, base = "D_5", rarity = 1},
+    full_circle = {order = 29, key = 'full_circle', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Full Circle", pos = {x=2,y=6}, set = "CustomCard", config = {chips = 9, count = 0, saved = {}}, base = "S_9", rarity = 2},
+    seven_luck = {order = 30, key = 'seven_luck', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "7 of Luck", pos = {x=3,y=6}, set = "CustomCard", config = {chips = 7, mult = 20, odds = 7}, base = "C_7", rarity = 2},
+    top_ten = {order = 31, key = 'top_ten', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Top 10", pos = {x=4,y=6}, set = "CustomCard", config = {chips = 10, mult = 5}, base = "S_T", rarity = 2},
+    crazy_eight = {order = 32, key = 'crazy_eight', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Crazy Eight", pos = {x=0,y=7}, set = "CustomCard", config = {mult = 8}, base = "S_8", rarity = 2},
+}'''
 match_indent = true
 
 [[patches]]
@@ -712,6 +716,10 @@ position = 'after'
 payload = '''if v.debuff then
     v.ability.temp_debuff = nil
     v:set_debuff()
+end
+if v.ability.temp_no_debuff then
+    v.ability.temp_no_debuff = nil
+    v:set_debuff()
 end'''
 match_indent = true
 
@@ -907,5 +915,49 @@ pattern = '''self.cost = math.max(1, math.floor((self.base_cost + self.extra_cos
 position = 'after'
 payload = '''if self.ability.pc_free then
     self.cost = 0
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''local badges = {}'''
+position = 'after'
+payload = '''if card and card.ability and card.ability.trading and card.ability.trading.rarity then
+    local rarities = {localize('k_shabby'), localize('k_basic'), localize('k_mint')}
+    local colors = {G.ARGS.LOC_COLOURS.cp_shabby, G.ARGS.LOC_COLOURS.cp_basic, G.ARGS.LOC_COLOURS.cp_mint}
+    if rarities[card.ability.trading.rarity] then
+        badges[#badges + 1] = create_badge(rarities[card.ability.trading.rarity], colors[card.ability.trading.rarity], nil, 1.2)
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = '''money = G.C.MONEY,'''
+position = 'after'
+payload = '''cp_shabby = HEX('7c6215'),
+cp_basic = HEX('16a91b'),
+cp_mint = HEX('05b6b6'),'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''local badges = {}'''
+position = 'after'
+payload = '''if self.ability and self.ability.trading then
+    no_badge = nil
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''badges.card_type = card_type'''
+position = 'at'
+payload = '''if not self.ability or not self.ability.trading then
+    badges.card_type = card_type
 end'''
 match_indent = true

@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.1.1
+--- VERSION: 1.1.2
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -21,7 +21,8 @@ SMODS.Enhancement {
     end,
     loc_text = {
         name = "Trading"
-    }
+    },
+    no_mod_badges = true
 }
 
 SMODS.Atlas({ key = "trading", atlas_table = "ASSET_ATLAS", path = "cards.png", px = 71, py = 95})
@@ -578,6 +579,11 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                         chips = config_thing.chips,
                         card = self
                     })
+                elseif name == "Crazy Eight" then
+                    table.insert(effects, {
+                        mult = config_thing.mult,
+                        card = self
+                    })
                 end
             elseif context.playing_card_hand then
                 if name == "Aluminum Plate" then
@@ -740,6 +746,21 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                             self.doubled_down = doubled
                         end
                     end
+                else
+                    if name == "Crazy Eight" then
+                        local cards_ = {}
+                        for j = 1, #G.play.cards do
+                            if (G.play.cards[j] ~= self) then
+                                table.insert(cards_, G.play.cards[j])
+                            end
+                        end
+                        for j = 1, #cards_ do
+                            local card = cards_[j]
+                            card:set_ability(G.P_CENTERS['m_wild'])
+                            card.ability.temp_no_debuff = true
+                            card:set_debuff()
+                        end
+                    end
                 end
             elseif context.very_very_before then
                 if name == "Free Pass" then
@@ -872,6 +893,8 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     if ((context.is_suit == "Spades") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Clubs") then
                         return true
                     end
+                elseif name == "Crazy Eight" then
+                    return true
                 end
                 return false
             elseif context.is_face then
@@ -936,6 +959,8 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     return 7
                 elseif name == "Top 10" then
                     return 10
+                elseif name == "Crazy Eight" then
+                    return 8
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -1254,8 +1279,9 @@ SMODS.Back {
                     local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
                     card:remove()
                 end
+                local t = {1, 1, 1, 2, 2}
                 for i = 1, 5 do
-                    local key = G.P_TRADING[get_trading_key()]
+                    local key = G.P_TRADING[get_trading_key(t[i])]
                     local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[key.base], G.P_CENTERS['m_pc_trading'], {playing_card = G.playing_card})
                     _card.force_trading = key.key
                     _card:set_ability(G.P_CENTERS['m_pc_trading'])
@@ -1504,11 +1530,21 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
     }
 )
 
-function get_trading_key()
+function get_trading_key(_rarity)
+    if not _rarity then
+        local rand = pseudorandom(pseudoseed('trading_rarity'))
+        if rand < 0.55 then
+            _rarity = 1
+        elseif rand < 0.9 then
+            _rarity = 2
+        else
+            _rarity = 3
+        end
+    end
     local rng_table = {}
     for i, j in pairs(G.P_TRADING) do
         if (not j.in_pool or j:in_pool()) and (not pc_cross_mod_cards[i] or not pc_cross_mod_cards[i].in_pool or pc_cross_mod_cards[i].in_pool()) then
-            if not j.is_joker then
+            if not j.is_joker and ((j.rarity or 2) == _rarity) then
                 rng_table[i] = j
             end
         end
@@ -1772,6 +1808,10 @@ function copy_card(other, new_card, card_scale, playing_card, strip_edition)
 end
 
 SMODS.current_mod.set_debuff = function(card)
+    if card.ability.temp_no_debuff or 
+        (card.ability.trading and (card.ability.trading.name == "Crazy Eight") and not card.debuff) then
+        return 'prevent_debuff'
+    end
     if card.ability.temp_debuff then
         return true
     end
