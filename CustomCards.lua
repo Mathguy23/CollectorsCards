@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.1.2
+--- VERSION: 1.1.2a
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -584,6 +584,23 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                         mult = config_thing.mult,
                         card = self
                     })
+                elseif name == "Dynamic Card" then
+                    if config_thing.mode == 'chips' then
+                        table.insert(effects, {
+                            chips = config_thing.chips,
+                            card = self
+                        })
+                    elseif config_thing.mode == 'mult' then
+                        table.insert(effects, {
+                            mult = config_thing.mult,
+                            card = self
+                        })
+                    elseif config_thing.mode == 'money' then
+                        table.insert(effects, {
+                            dollars = config_thing.dollars,
+                            card = self
+                        })
+                    end
                 end
             elseif context.playing_card_hand then
                 if name == "Aluminum Plate" then
@@ -643,60 +660,7 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                 end
             elseif context.before then
                 if context.cardarea == G.play then
-                    if name == "Rules Card" then
-                        ease_discard(1)
-                        card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_discards',vars={config_thing.discards}}, colour = G.C.RED})
-                        can_retrigger = true
-                    elseif name == "Wild Draw 4" then
-                        card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
-                        local size = math.min(#G.deck.cards, config_thing.cards)
-                        for i = 1, config_thing.cards do
-                            draw_card(G.deck,G.hand, i*100/size,'up', true)
-                            delay(0.1)
-                        end
-                        can_retrigger = true
-                    elseif name == "2mbstone" then
-                        if (G.consumeables.config.card_limit > #G.consumeables.cards + G.GAME.consumeable_buffer) and (pseudorandom('tom') < G.GAME.probabilities.normal/config_thing.odds) then
-                            card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
-                            G.GAME.consumeable_buffer = (G.GAME.consumeable_buffer or 0) + 1
-                            G.E_MANAGER:add_event(Event({func = function()
-                                local card = create_card('', G.consumeables, nil, nil, nil, nil, 'c_death', 'fool')
-                                card:add_to_deck()
-                                G.consumeables:emplace(card)
-                                G.GAME.consumeable_buffer = 0
-                            return true end }))
-                            can_retrigger = true
-                        end
-                    elseif name == "Executor" then
-                        local pool = {}
-                        for j = 1, #G.hand.cards do
-                            if not G.hand.cards[j].getting_sliced then
-                                table.insert(pool, G.hand.cards[j])
-                            end
-                        end
-                        if #pool > 0 then
-                            local card = pseudorandom_element(pool, pseudoseed('exec'))
-                            card.getting_sliced = true
-                            if card.ability and (card.ability.name == 'Glass Card') then 
-                                card:shatter()
-                            else
-                                card:start_dissolve()
-                            end
-                            config_thing.destroyed = config_thing.destroyed + 1
-                            if config_thing.destroyed >= config_thing.destroys then
-                                config_thing.destroyed = 0
-                                G.E_MANAGER:add_event(Event({ func = function()
-                                    local card = copy_card(self, nil, nil, true)
-                                    card:flip()
-                                    G.deck:emplace(card)
-                                    table.insert(G.playing_cards, card)
-                                    return true
-                                end
-                                }))
-                            end
-                            can_retrigger = true
-                        end
-                    end
+                    
                 end
             elseif context.destroying_card then
                 if name == ":3" then
@@ -765,6 +729,61 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
             elseif context.very_very_before then
                 if name == "Free Pass" then
                     hand_is_free = true
+                elseif name == "Wild Draw 4" then
+                    card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_cards',vars={config_thing.cards}}})
+                    local size = math.min(#G.deck.cards, config_thing.cards)
+                    for i = 1, config_thing.cards do
+                        draw_card(G.deck,G.hand, i*100/size,'up', true)
+                        delay(0.1)
+                    end
+                    can_retrigger = true
+                elseif name == "Rules Card" then
+                    ease_discard(1)
+                    card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_discards',vars={config_thing.discards}}, colour = G.C.RED})
+                    can_retrigger = true
+                elseif name == "2mbstone" then
+                    if (G.consumeables.config.card_limit > #G.consumeables.cards + G.GAME.consumeable_buffer) then
+                        if (pseudorandom('tom') < G.GAME.probabilities.normal/config_thing.odds) then
+                            card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_plus_tarot'), colour = G.C.PURPLE})
+                            G.GAME.consumeable_buffer = (G.GAME.consumeable_buffer or 0) + 1
+                            G.E_MANAGER:add_event(Event({func = function()
+                                local card = create_card('', G.consumeables, nil, nil, nil, nil, 'c_death', 'fool')
+                                card:add_to_deck()
+                                G.consumeables:emplace(card)
+                                G.GAME.consumeable_buffer = 0
+                            return true end }))
+                        end
+                        can_retrigger = true
+                    end
+                elseif name == "Executor" then
+                    local pool = {}
+                    for j = 1, #G.hand.cards do
+                        if not G.hand.cards[j].getting_sliced and (G.hand.cards[j] ~= self) and not G.hand.cards[j].highlighted then
+                            table.insert(pool, G.hand.cards[j])
+                        end
+                    end
+                    if #pool > 0 then
+                        local card = pseudorandom_element(pool, pseudoseed('exec'))
+                        card.getting_sliced = true
+                        if card.ability and (card.ability.name == 'Glass Card') then 
+                            card:shatter()
+                        else
+                            card:start_dissolve()
+                        end
+                        config_thing.destroyed = config_thing.destroyed + 1
+                        if config_thing.destroyed >= config_thing.destroys then
+                            config_thing.destroyed = 0
+                            G.E_MANAGER:add_event(Event({ func = function()
+                                local card = copy_card(self, nil, nil, true)
+                                card:flip()
+                                G.deck:emplace(card)
+                                table.insert(G.playing_cards, card)
+                                return true
+                            end
+                            }))
+                        end
+                        can_retrigger = true
+                    end
                 end
             elseif context.after then
                 if context.cardarea == G.play then
@@ -850,6 +869,10 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     return true
                 elseif name == "Free Pass" then
                     return true
+                elseif name == "Dynamic Card" then
+                    if config_thing.mode == 'face' then
+                        return true
+                    end
                 end
                 return false
             elseif context.is_suit then
@@ -916,6 +939,10 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     return true
                 elseif name == "Old Bell" then
                     return true
+                elseif name == "Dynamic Card" then
+                    if config_thing.mode == 'face' then
+                        return true
+                    end
                 end
                 return false
             elseif context.get_id then
@@ -961,6 +988,8 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     return 10
                 elseif name == "Crazy Eight" then
                     return 8
+                elseif name == "Dynamic Card" then
+                    return 6
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -1640,8 +1669,8 @@ G.FUNCS.can_up_rank = function(e)
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
-      e.config.colour = G.C.GREEN
-      e.config.button = 'up_rank'
+        e.config.colour = G.C.GREEN
+        e.config.button = 'up_rank'
     end
 end
 
@@ -1650,8 +1679,26 @@ G.FUNCS.can_down_rank = function(e)
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
-      e.config.colour = G.C.RED
-      e.config.button = 'down_rank'
+        e.config.colour = G.C.RED
+        e.config.button = 'down_rank'
+    end
+end
+
+G.FUNCS.change_mode = function(e)
+    e.config.ref_table.card.ability.trading.config.mode = e.config.ref_table.mode
+    e.config.ref_table.card:set_debuff()
+    if G.GAME.blind then
+        G.GAME.blind:debuff_card(e.config.ref_table.card)
+    end
+end
+
+G.FUNCS.can_change_mode = function(e)
+    if e.config.ref_table.card.debuff or ( e.config.ref_table.card.ability.trading.config.mode == e.config.ref_table.mode) then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        e.config.colour = e.config.ref_table.color
+        e.config.button = 'change_mode'
     end
 end
 
@@ -1685,6 +1732,47 @@ function G.UIDEF.rank_buttons(card)
     }}
     return t
 end
+
+function G.UIDEF.pc_dynamic_buttons(card)
+    local sell = nil
+    local use = nil
+    local amt = 0.05
+    use = 
+    {n=G.UIT.C, config={align = "cr", padding = 0}, nodes={
+      {n=G.UIT.R, config={ref_table = {card = card, color = G.C.CHIPS, mode = 'chips'}, align = "cm",maxw = 0.75, padding = 0.1, r=0.08, minw = 0.75, minh = 0.3, hover = true, shadow = true, colour = G.C.RED, button = 'change_mode', func = 'can_change_mode'}, nodes={
+        {n=G.UIT.T, config={text = localize('b_option_chips'),colour = G.C.UI.TEXT_LIGHT, scale = 0.25, shadow = true}},
+        {n=G.UIT.B, config = {w=0.1,h=0.3}},
+      }},
+      {n=G.UIT.R, config = {minh = amt *G.CARD_H,minw=0.1}},
+      {n=G.UIT.R, config={ref_table = {card = card, color = G.C.MULT, mode = 'mult'}, align = "cm",maxw = 0.75, padding = 0.1, r=0.08, minw = 0.75, minh = 0.3, hover = true, shadow = true, colour = G.C.RED, button = 'change_mode', func = 'can_change_mode'}, nodes={
+        {n=G.UIT.T, config={text = localize('b_option_mult'),colour = G.C.UI.TEXT_LIGHT, scale = 0.25, shadow = true}},
+        {n=G.UIT.B, config = {w=0.1,h=0.3}},
+      }},
+      {n=G.UIT.R, config = {minh = amt *G.CARD_H,minw=0.1}},
+      {n=G.UIT.R, config={ref_table = {card = card, color = G.C.MONEY, mode = 'money'}, align = "cm",maxw = 0.75, padding = 0.1, r=0.08, minw = 0.75, minh = 0.3, hover = true, shadow = true, colour = G.C.RED, button = 'change_mode', func = 'can_change_mode'}, nodes={
+        {n=G.UIT.T, config={text = localize('b_option_dollars'),colour = G.C.UI.TEXT_LIGHT, scale = 0.25, shadow = true}},
+        {n=G.UIT.B, config = {w=0.1,h=0.3}},
+      }},
+      {n=G.UIT.R, config = {minh = amt *G.CARD_H,minw=0.1}},
+      {n=G.UIT.R, config={ref_table = {card = card, color = G.C.FILTER, mode = 'face'}, align = "cm",maxw = 0.75, padding = 0.1, r=0.08, minw = 0.75, minh = 0.3, hover = true, shadow = true, colour = G.C.RED, button = 'change_mode', func = 'can_change_mode'}, nodes={
+        {n=G.UIT.T, config={text = localize('b_option_face'),colour = G.C.UI.TEXT_LIGHT, scale = 0.25, shadow = true}},
+        {n=G.UIT.B, config = {w=0.1,h=0.3}},
+      }},
+    }}
+    local t = {
+        n=G.UIT.ROOT, config = {padding = 0, colour = G.C.CLEAR}, nodes={
+        {n=G.UIT.R, config={padding = 0, align = 'cm'}, nodes={
+            {n=G.UIT.C, config={align = 'cm'}, nodes={
+            use
+            }},
+            {n=G.UIT.C, config = {minw = 1.0 * G.CARD_W}},
+        }},
+    }}
+    return t
+end
+
+SMODS.draw_ignore_keys['rank_button'] = true
+SMODS.draw_ignore_keys['dynamic_button'] = true
 
 local old_nominal = Card.get_nominal
 function Card:get_nominal(mod)
@@ -2058,6 +2146,27 @@ SMODS.DrawSteps['seal'].func = function(self, layer)
     if G and G.GAME and G.GAME.pc_show_top10 and self.ability and self.ability.pc_top10 then
         G.pc_top10_indicator.role.draw_major = self
         G.pc_top10_indicator:draw_shader('dissolve', nil, nil, nil, self.children.center)
+    end
+end
+
+local old_tags_buttons = SMODS.DrawSteps['tags_buttons'].func
+SMODS.DrawSteps['tags_buttons'].func = function(self)
+    old_tags_buttons(self)
+    if self.children.rank_button then
+        if self.highlighted and (self.area == G.hand) and (G.hand ~= nil) then
+            self.children.rank_button.states.visible = true
+            self.children.rank_button:draw()
+        else
+            self.children.rank_button.states.visible = false
+        end
+    end
+    if self.children.dynamic_button then
+        if self.highlighted and (self.area == G.hand) and (G.hand ~= nil) then
+            self.children.dynamic_button.states.visible = true
+            self.children.dynamic_button:draw()
+        else
+            self.children.dynamic_button.states.visible = false
+        end
     end
 end
 

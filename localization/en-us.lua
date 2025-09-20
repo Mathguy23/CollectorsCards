@@ -161,6 +161,11 @@ return {
                     "Crazy Eight",
                 },
             },
+            dynamic_card = {
+                text = {
+                    "Dynamic Card",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -434,6 +439,15 @@ return {
                     "{C:red}debuffed{} this round"
                 },
             },
+            dynamic_card = {
+                text = {
+                    "{C:attention}6{}",
+                    "An {C:attention}Effect{} of your choice:",
+                    "{V:1}+#1#{} {V:2}Chips{}, {V:3}+#2#{} {V:4}Mult{},",
+                    "{V:5}+$#3#{}, or {V:6}Face Card{} +",
+                    "{V:6}Always Scores{}"
+                },
+            },
         },
         Tarot = {
             c_pc_exchange = {
@@ -483,6 +497,10 @@ return {
             k_shabby = "Shabby",
             k_basic = "Basic",
             k_mint = "Mint",
+            b_option_chips = "C",
+            b_option_mult = "M",
+            b_option_dollars = "$",
+            b_option_face = ":)",
         },
         v_dictionary = {
             a_discards = "+#1# Discard",

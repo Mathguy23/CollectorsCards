@@ -94,6 +94,20 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
     elseif specific_vars.collect.name == "Crazy Eight" then
         info_queue[#info_queue + 1] = G.P_CENTERS['m_wild']
         loc_vars = {config_thing.mult}
+    elseif specific_vars.collect.name == "Dynamic Card" then
+        local colours = {G.C.CHIPS, G.C.UI.TEXT_DARK, G.C.MULT, G.C.UI.TEXT_DARK, G.C.MONEY, G.C.FILTER}
+        if config_thing.mode == 'chips' then
+            colours[1] = G.C.GREEN
+            colours[2] = G.C.GREEN
+        elseif config_thing.mode == 'mult' then
+            colours[3] = G.C.GREEN
+            colours[4] = G.C.GREEN
+        elseif config_thing.mode == 'money' then
+            colours[5] = G.C.GREEN
+        elseif config_thing.mode == 'face' then
+            colours[6] = G.C.GREEN
+        end
+        loc_vars = {config_thing.chips, config_thing.mult, config_thing.dollars, colours = colours}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -142,6 +156,7 @@ payload = '''self.P_TRADING = {
     seven_luck = {order = 30, key = 'seven_luck', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "7 of Luck", pos = {x=3,y=6}, set = "CustomCard", config = {chips = 7, mult = 20, odds = 7}, base = "C_7", rarity = 2},
     top_ten = {order = 31, key = 'top_ten', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Top 10", pos = {x=4,y=6}, set = "CustomCard", config = {chips = 10, mult = 5}, base = "S_T", rarity = 2},
     crazy_eight = {order = 32, key = 'crazy_eight', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Crazy Eight", pos = {x=0,y=7}, set = "CustomCard", config = {mult = 8}, base = "S_8", rarity = 2},
+    dynamic_card = {order = 33, key = 'dynamic_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Dynamic Card", pos = {x=1,y=7}, set = "CustomCard", config = {mult = 4, chips = 30, dollars = 2}, base = "H_6", rarity = 1},
 }'''
 match_indent = true
 
@@ -279,7 +294,8 @@ match_indent = true
 target = 'card.lua'
 pattern = '''if self.children.use_button then self.children.use_button:remove(); self.children.use_button = nil end'''
 position = 'after'
-payload = '''if self.children.rank_button then self.children.rank_button:remove(); self.children.rank_button = nil end'''
+payload = '''if self.children.rank_button then self.children.rank_button:remove(); self.children.rank_button = nil end
+if self.children.dynamic_button then self.children.dynamic_button:remove(); self.children.dynamic_button = nil end'''
 match_indent = true
 
 [[patches]]
@@ -292,16 +308,27 @@ payload = '''if self.playing_card then
         self.children.rank_button = UIBox{
             definition = G.UIDEF.rank_buttons(self), 
             config = {align=
-                    ((self.area == G.jokers) or (self.area == G.consumeables)) and "cr" or
                     "bmi"
-                , offset = 
-                    ((self.area == G.jokers) or (self.area == G.consumeables)) and {x= - 0.4,y=-0.25*G.CARD_H} or
+                , offset =
                     {x=0,y=0.65},
                 parent =self}
         }
     elseif self.children.rank_button then
         self.children.rank_button:remove()
         self.children.rank_button = nil
+    end
+    if self.highlighted and self.ability and self.ability.trading and (self.ability.trading.name == "Dynamic Card") and (self.area == G.hand) then
+        self.children.dynamic_button = UIBox{
+            definition = G.UIDEF.pc_dynamic_buttons(self), 
+            config = {align=
+                    "cm"
+                , offset = 
+                    {x= 0,y= 0},
+                parent =self}
+        }
+    elseif self.children.dynamic_button then
+        self.children.dynamic_button:remove()
+        self.children.dynamic_button = nil
     end
 end'''
 match_indent = true
