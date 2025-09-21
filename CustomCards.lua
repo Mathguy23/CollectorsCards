@@ -4,7 +4,7 @@
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.1.2a
+--- VERSION: 1.1.2q
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -2198,6 +2198,7 @@ function G.FUNCS.get_poker_hand_info(_cards)
 end
 
 table.insert(SMODS.calculation_keys, 'cards')
+table.insert(SMODS.other_calculation_keys, 'cards')
 
 ----------------------------------------------
 ------------MOD CODE END----------------------
