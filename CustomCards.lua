@@ -1,10 +1,10 @@
 --- STEAMODDED HEADER
---- MOD_NAME: Custom Playing Cards
+--- MOD_NAME: Spare Deck
 --- MOD_ID: CustomCards
 --- PREFIX: pc
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Playing Cards with special abilities.
---- VERSION: 1.1.2q
+--- VERSION: 1.1.3
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -89,6 +89,8 @@ SMODS.Atlas({ key = "top10", atlas_table = "ASSET_ATLAS", path = "top10_.png", p
         G.pc_top10_indicator = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 0,y = 0})
     end
 })
+
+SMODS.Atlas({key = "modicon", path = "icon.png", px = 34, py = 34}):register()
 
 SMODS.current_mod.custom_collection_tabs = function()
 	return { UIBox_button {
@@ -361,6 +363,19 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     end
                 elseif self.area == G.hand then
 
+                end
+            elseif context.individual and (context.cardarea == G.hand) and context.end_of_round then
+                if self.area == G.play then
+                    
+                elseif self.area == G.hand then
+                    if name == "Big Two" then
+                        if context.other_card == self then
+                            table.insert(effects, {
+                                dollars = -config_thing.dollars,
+                                card = self,
+                            })
+                        end
+                    end
                 end
             elseif context.playing_card_main then
                 if name == "Flint Card" then
@@ -792,21 +807,25 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                 if context.drawn == G.hand then
                     if name == "Meteor" then
                         if context.facing_blind then
-                            self.ability.already_drawn = G.GAME.round
-                            for i = 1, config_thing.cards do
-                                local card = create_playing_card({
-                                    front = pseudorandom_element(G.P_CARDS, pseudoseed('met')), 
-                                    center = G.P_CENTERS.c_base}, G.hand, nil, nil, {G.C.SECONDARY_SET.Enhanced})
-                                card.ability.fleeting = true
-                                card:set_ability(G.P_CENTERS['m_stone'])
-                                G.GAME.blind:debuff_card(card)
-                                G.hand:sort()
-                            end
                             can_retrigger = true
+                            G.E_MANAGER:add_event(Event({
+                                trigger = 'immediate',
+                                func = (function()
+                                    for i = 1, config_thing.cards do
+                                        local card = create_playing_card({
+                                            front = pseudorandom_element(G.P_CARDS, pseudoseed('met')), 
+                                            center = G.P_CENTERS.c_base}, G.hand, nil, nil, {G.C.SECONDARY_SET.Enhanced})
+                                        card.ability.fleeting = true
+                                        card:set_ability(G.P_CENTERS['m_stone'])
+                                        G.GAME.blind:debuff_card(card)
+                                        G.hand:sort()
+                                    end
+                                    return true
+                                end)
+                            }))
                         end
                     elseif name == "Bust Card" then
                         if context.facing_blind then
-                            self.ability.already_drawn = G.GAME.round
                             local pool = {}
                             for i, j in ipairs(G.hand.cards) do
                                 local card = G.hand.cards[i]
@@ -814,15 +833,27 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                                     table.insert(pool, card)
                                 end
                             end
-                            card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_bust'), colour = G.C.RED})
-                            for i = 1, config_thing.cards do
-                                if #pool > 0 then
-                                    local card, index = pseudorandom_element(pool, pseudoseed('bust'))
-                                    table.remove(pool, index)
-                                    card.ability.temp_debuff = true
-                                    card:set_debuff()
+                            for i, j in ipairs(context.drawn_cards) do
+                                local card = context.drawn_cards[i]
+                                if (card ~= self) then
+                                    table.insert(pool, card)
                                 end
                             end
+                            card_eval_status_text(self, 'jokers', nil, nil, nil, {message = localize('k_bust'), colour = G.C.RED})
+                            G.E_MANAGER:add_event(Event({
+                                trigger = 'immediate',
+                                func = (function()
+                                    for i = 1, config_thing.cards do
+                                        if #pool > 0 then
+                                            local card, index = pseudorandom_element(pool, pseudoseed('bust'))
+                                            table.remove(pool, index)
+                                            card.ability.temp_debuff = true
+                                            card:set_debuff()
+                                        end
+                                    end
+                                    return true
+                                end)
+                            }))
                             can_retrigger = true
                         end
                     end
@@ -882,6 +913,10 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     end
                 elseif name == "Eye Card" then
                     if (context.is_suit == "Clubs") or (context.is_suit == "Spades") then
+                        return true
+                    end
+                elseif name == "Rules Card" then
+                    if ((context.is_suit == "Clubs") and next(find_joker('Smeared Joker'))) or (context.is_suit == "Spades") then
                         return true
                     end
                 elseif name == "Wild Draw 4" then
@@ -990,6 +1025,8 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
                     return 8
                 elseif name == "Dynamic Card" then
                     return 6
+                elseif name == "Big Two" then
+                    return 2
                 end
                 return -math.random(100, 1000000)
             elseif context.repetition then
@@ -1165,6 +1202,20 @@ function Card:calculate_exotic(context, do_repeat, blueprint_card)
         i = i + 1
     end
     return effects
+end
+
+function Card:reset_trading_progress()
+    local name = self.ability.trading and self.ability.trading.name
+    local config_thing = self.ability.trading and self.ability.trading.config or {}
+    if name == "Jack in a Box" then
+        config_thing.scored = 0
+    elseif name == "Sunflower" then
+        config_thing.chips = 8
+    elseif name == ":3" then
+        config_thing.scored = 0
+    elseif name == "Executor" then
+        config_thing.destroyed = 0
+    end
 end
 
 SMODS.Tarot {
@@ -1880,6 +1931,20 @@ function Card:set_base(card, initial)
         pc_redo_top10()
     end
     return result
+end
+
+local old_ability = Card.set_ability 
+function Card:set_ability(center, initial, delay_sprites)
+    local hand_size1 = not self.debuff and self.ability and self.ability.trading and self.ability.trading.config.pc_hand_size or 0
+    old_ability(self, center, initial, delay_sprites)
+    local hand_size2 = not self.debuff and self.ability and self.ability.trading and self.ability.trading.config.pc_hand_size or 0
+    if self.area == G.hand and (G.hand ~= nil) then
+        if hand_size1 ~= hand_size2 then
+            local change = hand_size2 - hand_size1
+            G.hand.config.real_card_limit = (G.hand.config.real_card_limit or G.hand.config.card_limit) + change
+            G.hand.config.card_limit = math.max(0, G.hand.config.real_card_limit)
+        end
+    end
 end
 
 local old_copy_card = copy_card

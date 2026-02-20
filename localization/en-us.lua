@@ -166,6 +166,11 @@ return {
                     "Dynamic Card",
                 },
             },
+            big_two = {
+                text = {
+                    "Big Two",
+                },
+            },
             phantom = {
                 name = "Phantom",
                 text = {
@@ -220,7 +225,7 @@ return {
             playable_joker = {
                 text = {
                     "{C:attention}Face Card{}",
-                    "On {C:attention}discard{}, {C:green}#1# in #2#{} chance to",
+                    "On {C:red}Discard{}, {C:green}#1# in #2#{} chance to",
                     "add {C:dark_edition}Foil{}, {C:dark_edition}Holographic{}, or",
                     "{C:dark_edition}Polychrome{} edition",
                     "to a random card in {C:attention}hand"
@@ -235,8 +240,8 @@ return {
             },
             rules_card = {
                 text = {
-                    "{C:attention}Always scores{}",
-                    "On {C:attention}Play{}, Gain {C:red}+#1#{}",
+                    "{C:attention}Always scores{}, {C:spades}Spades{}",
+                    "On {C:blue}Play{}, Gain {C:red}+#1#{}",
                     "discards",
                     "{s:0.8,C:inactive}Suggested by Enderjed"
                 }
@@ -244,7 +249,7 @@ return {
             wild_draw_4 = {
                 text = {
                     "{C:attention}4{}, {C:dark_edition}All Suits{}, {C:blue}+#1#{} chips",
-                    "On {C:attention}Play{}, Draw {C:attention}#2#{} cards",
+                    "On {C:blue}Play{}, Draw {C:attention}#2#{} cards",
                 }
             },
             jack_in_a_box = {
@@ -259,7 +264,7 @@ return {
             tombstone = {
                 text = {
                     "{C:attention}2{}, {C:blue}+#1#{} chips",
-                    "On {C:attention}Play{}, {C:green}#2# in #3#{} chance",
+                    "On {C:blue}Play{}, {C:green}#2# in #3#{} chance",
                     "to create {C:tarot}Death{}",
                     "{C:inactive}(Must have room)",
                     "{s:0.8,C:inactive}Suggested by Bapphic"
@@ -303,7 +308,7 @@ return {
             },
             double_down = {
                 text = {
-                    "On {C:attention}Play{}, convert into a",
+                    "On {C:blue}Play{}, convert into a",
                     "random {C:attention}played{} card for",
                     "this {C:attention}hand{}",
                 },
@@ -318,7 +323,7 @@ return {
             },
             haunted_card = {
                 text = {
-                    "On {C:attention}discard{}, Draw",
+                    "On {C:red}Discard{}, Draw",
                     "{C:attention}#1#{} extra cards",
                     "as {C:attention}Phantom{}"
                 },
@@ -326,7 +331,7 @@ return {
             executor = {
                 text = {
                     "{C:attention}3{}, {C:blue}+#1#{} chips, {C:attention}Face Card{}",
-                    "On {C:attention}Play{}, destroy a card",
+                    "On {C:blue}Play{}, destroy a card",
                     "in {C:attention}hand{}. Add a permanant copy",
                     "of this {C:attention}card{} to {C:attention}Full Deck{} every",
                     "{C:attention}#2#{} cards destroyed",
@@ -405,7 +410,7 @@ return {
             full_circle = {
                 text = {
                     "{C:attention}9{}, {C:spades}Spades{}, {C:blue}+#1#{} Chips",
-                    "After {C:attention}Play{}, {C:attention}save{} played hand",
+                    "After {C:blue}Play{}, {C:attention}save{} played hand",
                     "type. If a hand is {C:attention}resaved{},",
                     "{C:attention}upgrade{} it once for {C:attention}each{} saved",
                     "hand then {S:1.1,C:red,E:2}self destruct{}",
@@ -433,7 +438,7 @@ return {
                 text = {
                     "{C:attention}8{}, {C:red}+#1#{} Mult,",
                     "{C:dark_edition}All Suits{}, {C:green}Undebuffable{}",
-                    "On {C:attention}Play{}, {C:attention}other{} cards are",
+                    "On {C:blue}Play{}, {C:attention}other{} cards are",
                     "converted into {C:attention}Wild Cards{}",
                     "and {C:attention}prevented{} from being",
                     "{C:red}debuffed{} this round"
@@ -446,6 +451,15 @@ return {
                     "{V:1}+#1#{} {V:2}Chips{}, {V:3}+#2#{} {V:4}Mult{},",
                     "{V:5}+$#3#{}, or {V:6}Face Card{} +",
                     "{V:6}Always Scores{}"
+                },
+            },
+            big_two = {
+                text = {
+                    "{C:attention}2{}",
+                    "{C:attention}+2{} hand size while this",
+                    "card stays in hand, {C:red}-$2{}",
+                    "while this card stays",
+                    "in hand at {C:attention}end of round{}"
                 },
             },
         },
@@ -474,6 +488,9 @@ return {
             m_pc_trading = {
                 name = 'Trading Card',
                 text = {
+                    "Overrides {C:attention}rank{} and",
+                    "{C:attention}suit{} and has a",
+                    "{C:dark_edition}special ability{}"
                 }
             },
         },

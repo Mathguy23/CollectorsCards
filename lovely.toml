@@ -108,6 +108,8 @@ payload = '''elseif specific_vars and not specific_vars.debuffed and type(specif
             colours[6] = G.C.GREEN
         end
         loc_vars = {config_thing.chips, config_thing.mult, config_thing.dollars, colours = colours}
+    elseif specific_vars.collect.name == "Big Two" then
+        loc_vars = {config_thing.pc_hand_size, config_thing.dollars}
     end
     localize{type = 'descriptions', key = specific_vars.collect.key, set = "CustomCard", nodes = desc_nodes, vars = loc_vars}
     if specific_vars.bonus_chips then
@@ -157,6 +159,7 @@ payload = '''self.P_TRADING = {
     top_ten = {order = 31, key = 'top_ten', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Top 10", pos = {x=4,y=6}, set = "CustomCard", config = {chips = 10, mult = 5}, base = "S_T", rarity = 2},
     crazy_eight = {order = 32, key = 'crazy_eight', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Crazy Eight", pos = {x=0,y=7}, set = "CustomCard", config = {mult = 8}, base = "S_8", rarity = 2},
     dynamic_card = {order = 33, key = 'dynamic_card', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Dynamic Card", pos = {x=1,y=7}, set = "CustomCard", config = {mult = 4, chips = 30, dollars = 2}, base = "H_6", rarity = 1},
+    big_two = {order = 34, key = 'big_two', unlocked = true, discovered = true, atlas = 'pc_trading', cost = 1, name = "Big Two", pos = {x=2,y=7}, set = "CustomCard", config = {pc_debuffed = false, pc_hand_size = 2, dollars = 2}, base = "S_2", rarity = 3},
 }'''
 match_indent = true
 
@@ -632,12 +635,12 @@ match_indent = true
 target = 'game.lua'
 pattern = '''G.GAME.blind:drawn_to_hand()'''
 position = 'before'
-payload = '''phantom_cards = nil
-for i = 1, #G.hand.cards do
-    if G.hand.cards[i].ability.trading and (G.hand.cards[i].ability.already_drawn ~= G.GAME.round) then
-        G.hand.cards[i]:calculate_exotic({drawn = G.hand, facing_blind = G.GAME.facing_blind})
-    end
-end
+payload = '''-- phantom_cards = nil
+--for i = 1, #G.hand.cards do
+--    if G.hand.cards[i].ability.trading and (G.hand.cards[i].ability.already_drawn ~= G.GAME.round) then
+--        G.hand.cards[i]:calculate_exotic({drawn = G.hand, facing_blind = G.GAME.facing_blind})
+--    end
+--end
 '''
 match_indent = true
 
@@ -987,4 +990,114 @@ position = 'at'
 payload = '''if not self.ability or not self.ability.trading then
     badges.card_type = card_type
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability.name == "Joker Stencil" then'''
+position = 'before'
+payload = '''if (self.area == G.hand) and self.ability and self.ability.trading and self.ability.trading.config.pc_hand_size then
+    local curr_debuff = self.debuff
+    local old_debuff = self.ability.trading.config.pc_debuffed
+    if curr_debuff == nil then
+        curr_debuff = false
+    else
+        curr_debuff = true
+    end
+    if curr_debuff ~= old_debuff then
+        self.ability.trading.config.pc_debuffed = curr_debuff
+        if self.ability.trading.config.pc_hand_size then
+            if curr_debuff then
+                G.hand.config.real_card_limit = (G.hand.config.real_card_limit or G.hand.config.card_limit) - self.ability.trading.config.pc_hand_size
+                G.hand.config.card_limit = math.max(0, G.hand.config.real_card_limit)
+            else
+                G.hand.config.real_card_limit = (G.hand.config.real_card_limit or G.hand.config.card_limit) + self.ability.trading.config.pc_hand_size
+                G.hand.config.card_limit = math.max(0, G.hand.config.real_card_limit)
+            end
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''if self.cards[i] == card then'''
+position = 'after'
+payload = '''   if card.ability and card.ability.trading and card.ability.trading.config.pc_hand_size and (self == G.hand) then
+        self.config.real_card_limit = (self.config.real_card_limit or self.config.card_limit) - card.ability.trading.config.pc_hand_size
+        self.config.card_limit = math.max(0, self.config.real_card_limit)
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''function CardArea:emplace(card, location, stay_flipped)'''
+position = 'after'
+payload = '''   if card.ability and card.ability.trading and card.ability.trading.config.pc_hand_size and not card.debuff and (self == G.hand) then
+        self.config.real_card_limit = (self.config.real_card_limit or self.config.card_limit) + card.ability.trading.config.pc_hand_size
+        self.config.card_limit = math.max(0, self.config.real_card_limit)
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if limit <= 0 then break end'''
+position = 'before'
+payload = '''if not card.debuff and card.ability and card.ability.trading and card.ability.trading.config.pc_hand_size and not card.debuff then
+    if limit + card.ability.trading.config.pc_hand_size < 0 then
+        if pc_old_limit == 0 then
+            limit = -1
+        else
+            limit = 0
+        end
+    else
+        limit = limit + card.ability.trading.config.pc_hand_size
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''draw_card(G.deck,G.hand, i*100/hand_space,'up', true, cards_to_draw[i])'''
+position = 'after'
+payload = '''cards_to_draw[i]:calculate_exotic({drawn = G.hand, facing_blind = G.GAME.facing_blind, drawn_cards = cards_to_draw})'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''for k, v in pairs(other.ability) do'''
+position = 'before'
+payload = '''local pc_hand_size1 = not new_card.debuff and new_card.ability and new_card.ability.trading and new_card.ability.trading.config.pc_hand_size or 0'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''if not strip_edition then'''
+position = 'before'
+payload = '''local pc_hand_size2 = not new_card.debuff and new_card.ability and new_card.ability.trading and new_card.ability.trading.config.pc_hand_size or 0
+if new_card.ability and new_card.ability.trading and new_card.reset_trading_progress then
+    new_card:reset_trading_progress()
+end
+if new_card.area == G.hand then
+    if pc_hand_size1 ~= pc_hand_size2 then
+        local change = pc_hand_size2 - pc_hand_size1
+        G.hand.config.real_card_limit = (G.hand.config.real_card_limit or G.hand.config.card_limit) + change
+        G.hand.config.card_limit = math.max(0, G.hand.config.real_card_limit)
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''limit = limit - 1 + mod'''
+position = 'before'
+payload = '''local pc_old_limit = limit'''
 match_indent = true
